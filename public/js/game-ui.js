@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const guesserArea = document.getElementById('guesser-area');
     const interceptionArea = document.getElementById('interception-area');
     const cluesDisplayArea = document.getElementById('clues-display-area');
+    const cluesTitle = document.getElementById('clues-title');
     const cluesList = document.getElementById('clues-list');
     const turnStatusArea = document.getElementById('turn-status-area');
     const turnStatusMessage = document.getElementById('turn-status-message');
@@ -237,7 +238,8 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             cluesDisplayArea.style.display = 'block';
             const communicatorName = players.find(p => p.id === gameState.communicators[gameState.currentTeam]).name;
-            cluesList.innerHTML = `<h4>Indizi di ${communicatorName}:</h4>` + gameState.currentClues.map(c => `<li>${c}</li>`).join('');
+            cluesTitle.textContent = `Indizi di ${communicatorName}:`;
+            cluesList.innerHTML = gameState.currentClues.map(c => `<li>${c}</li>`).join('');
 
             if (gameState.phase === 'interception') {
                 const attemptedPlayer = players.find(p => p.id === gameState.attemptedPlayers.interception);

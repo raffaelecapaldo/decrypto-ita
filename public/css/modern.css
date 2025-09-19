@@ -22,6 +22,9 @@
     --success-color: #10b981;
     --error-color: #ef4444;
     --warning-color: #f59e0b;
+    --success-color-bg: #d1fae5;
+    --error-color-bg: #fee2e2;
+    --warning-color-bg: #fef3c7;
 }
 
 [data-theme="dark"] {
@@ -43,6 +46,9 @@
     --success-color: #34d399;
     --error-color: #f87171;
     --warning-color: #fbbf24;
+    --success-color-bg: #064e3b;
+    --error-color-bg: #7f1d1d;
+    --warning-color-bg: #4b3b0a;
 }
 
 body {
@@ -455,11 +461,19 @@ button:disabled {
 }
 
 /* Game Log & History */
-#game-log-area, #history-area {
+#game-log-area {
     display: block;
     background-color: transparent;
     border: none;
     padding: 0;
+}
+
+#history-area {
+    display: block;
+}
+
+#history-area h4 {
+    color: var(--text-color);
 }
 
 #game-log-list {
@@ -511,19 +525,15 @@ button:disabled {
     font-size: 0.9rem;
 }
 
-.team-white {
+.history-entry-header .team-name.team-white {
     background-color: var(--team-white-bg);
     color: var(--team-white-text);
     border: 1px solid var(--border-color);
 }
 
-.team-black {
+.history-entry-header .team-name.team-black {
     background-color: var(--team-black-bg);
     color: var(--team-black-text);
-}
-
-[data-theme="dark"] .team-white {
-    color: var(--team-white-text);
 }
 
 
@@ -550,29 +560,27 @@ button:disabled {
 
 .interception-attempt {
     border-color: var(--warning-color);
-    background-color: var(--warning-color-bg, #fef3c7);
+    background-color: var(--warning-color-bg);
+}
+
+.interception-attempt.success {
+    border-color: var(--success-color);
+    background-color: var(--success-color-bg);
+}
+
+.interception-attempt.fail {
+    border-color: var(--error-color);
+    background-color: var(--error-color-bg);
 }
 
 .decipher-attempt.success {
     border-color: var(--success-color);
-    background-color: var(--success-color-bg, #d1fae5);
+    background-color: var(--success-color-bg);
 }
 
 .decipher-attempt.fail {
     border-color: var(--error-color);
-    background-color: var(--error-color-bg, #fee2e2);
-}
-
-[data-theme="dark"] .interception-attempt {
-    background-color: #4b3b0a;
-}
-
-[data-theme="dark"] .decipher-attempt.success {
-    background-color: #064e3b;
-}
-
-[data-theme="dark"] .decipher-attempt.fail {
-    background-color: #7f1d1d;
+    background-color: var(--error-color-bg);
 }
 
 #game-over-area {
