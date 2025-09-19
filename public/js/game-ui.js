@@ -38,6 +38,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const guessError = document.getElementById('guess-error');
     const interceptionError = document.getElementById('interception-error');
 
+    // Elementi del Modal
+    const tablesModal = document.getElementById('tables-modal');
+    const openTablesModalBtn = document.getElementById('open-tables-modal-btn');
+    const closeTablesModalBtn = document.getElementById('close-tables-modal-btn');
+
+    openTablesModalBtn.addEventListener('click', () => {
+        tablesModal.style.display = 'block';
+    });
+
+    closeTablesModalBtn.addEventListener('click', () => {
+        tablesModal.style.display = 'none';
+    });
+
+    window.addEventListener('click', (event) => {
+        if (event.target === tablesModal) {
+            tablesModal.style.display = 'none';
+        }
+    });
+
     function showTemporaryError(element, message) {
         element.textContent = message;
         setTimeout(() => {
@@ -70,7 +89,6 @@ document.addEventListener('DOMContentLoaded', () => {
             showTemporaryError(guessError, 'Inserisci 3 numeri validi.');
             return;
         }
-        // Validazione per numeri non ripetuti
         const uniqueGuess = new Set(guess);
         if (uniqueGuess.size !== 3) {
             showTemporaryError(guessError, 'I numeri non devono essere ripetuti.');
@@ -88,7 +106,6 @@ document.addEventListener('DOMContentLoaded', () => {
             showTemporaryError(interceptionError, 'Inserisci 3 numeri validi per intercettare.');
             return;
         }
-        // Validazione per numeri non ripetuti
         const uniqueGuess = new Set(guess);
         if (uniqueGuess.size !== 3) {
             showTemporaryError(interceptionError, 'I numeri non devono essere ripetuti.');
@@ -104,7 +121,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const ownSocketId = window.socket.getId();
         const startGameBtn = document.getElementById('start-game-btn');
 
-        // Mostra il pulsante "Avvia Partita" solo al creatore della stanza
         if (ownSocketId === creatorId) {
             startGameBtn.style.display = 'block';
         } else {
@@ -117,11 +133,111 @@ document.addEventListener('DOMContentLoaded', () => {
             if (p.socketId === ownSocketId) {
                 text += ' (Tu)';
             }
-            // Questo non funzionerà qui perché lo stato di comunicatore non è nella lista lobby
-            // lo aggiungerò alla UI di gioco
             li.textContent = text;
             if (p.team === 'white') whiteTeamList.appendChild(li);
             else if (p.team === 'black') blackTeamList.appendChild(li);
+        });
+    }
+
+    function updateTables(gameState, playerTeam) {
+        const modalBody = document.getElementById('modal-tables-body');
+        modalBody.innerHTML = ''; // Clear previous content
+
+        const opponentTeam = playerTeam === 'white' ? 'black' : 'white';
+        const teamsToRender = [
+            { name: playerTeam, title: `Squadra ${playerTeam === 'white' ? 'Bianca' : 'Nera'} (La tua)` },
+            { name: opponentTeam, title: `Squadra ${opponentTeam === 'white' ? 'Bianca' : 'Nera'}` }
+        ];
+
+        teamsToRender.forEach(teamInfo => {
+            const team = teamInfo.name;
+            const wrapper = document.createElement('div');
+            wrapper.className = 'team-table-wrapper';
+
+            let tableStructure = `<h3>${teamInfo.title}</h3>`;
+
+            // Main table for rounds 1-8
+            tableStructure += '<div class="modal-table">';
+            for (let i = 1; i <= 8; i++) {
+                tableStructure += `
+                    <div class="round-container" id="round-${team}-${i}">
+                        <div class="round-header">
+                            <span class="round-number"># ${i.toString().padStart(2, '0')}</span>
+                            <div class="code-icons">
+                                <span class="icon" id="guess-code-${team}-${i}">?</span>
+                                <span class="icon" id="actual-code-${team}-${i}">💾</span>
+                            </div>
+                        </div>
+                        <div class="round-clues" id="clues-${team}-${i}"></div>
+                    </div>
+                `;
+            }
+            tableStructure += '</div>';
+
+            // Clue summary section
+            tableStructure += '<div class="clue-summary-container">';
+            for (let i = 1; i <= 4; i++) {
+                tableStructure += `
+                    <div class="clue-summary-column">
+                        <div class="clue-summary-title"># 0${i}</div>
+                        <ul class="clue-summary-list" id="summary-${team}-${i}"></ul>
+                    </div>
+                `;
+            }
+            tableStructure += '</div>';
+
+            wrapper.innerHTML = tableStructure;
+            modalBody.appendChild(wrapper);
+        });
+
+        // Populate tables with history data
+        gameState.history.forEach(entry => {
+            const round = entry.round;
+            const team = entry.team;
+            const opponent = team === 'white' ? 'black' : 'white';
+
+            // Update clues display for the team that gave clues
+            const cluesContainer = document.getElementById(`clues-${team}-${round}`);
+            if(cluesContainer) cluesContainer.innerHTML = entry.clues.map(c => `<span>${c}</span>`).join(', ');
+
+            // Handle decipher result
+            if (entry.decipherResult) {
+                const res = entry.decipherResult;
+                const guessCodeEl = document.getElementById(`guess-code-${team}-${round}`);
+                if(guessCodeEl) guessCodeEl.textContent = res.guess.join('-');
+
+                if (res.type === 'decipher_fail') {
+                    const actualCodeEl = document.getElementById(`actual-code-${team}-${round}`);
+                    if(actualCodeEl) actualCodeEl.textContent = res.correctCode.join('-');
+                    // Populate summary
+                    res.correctCode.forEach((code, index) => {
+                        const clueList = document.getElementById(`summary-${team}-${code}`);
+                        if(clueList) {
+                            const li = document.createElement('li');
+                            li.textContent = entry.clues[index];
+                            clueList.appendChild(li);
+                        }
+                    });
+                } else { // success
+                     const actualCodeEl = document.getElementById(`actual-code-${team}-${round}`);
+                     if(actualCodeEl) actualCodeEl.textContent = res.guess.join('-');
+                     res.guess.forEach((code, index) => {
+                        const clueList = document.getElementById(`summary-${team}-${code}`);
+                        if(clueList) {
+                            const li = document.createElement('li');
+                            li.textContent = entry.clues[index];
+                            clueList.appendChild(li);
+                        }
+                    });
+                }
+            }
+
+            // Handle interception result
+            if (entry.interceptionResult) {
+                const res = entry.interceptionResult;
+                const guessCodeEl = document.getElementById(`guess-code-${opponent}-${round}`);
+                 if(guessCodeEl) guessCodeEl.textContent = res.guess.join('-');
+            }
         });
     }
 
@@ -192,6 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         renderHistory(gameState.history);
+        updateTables(gameState, playerTeam);
 
         const currentCommunicator = players.find(p => p.id === gameState.communicators[gameState.currentTeam]);
 
