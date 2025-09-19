@@ -47,6 +47,7 @@ function startGame(room) {
         },
         currentClues: [],
         turnResult: null,
+        turnHistory: null,
         attemptedPlayers: {
             interception: null, // ID del giocatore che ha tentato di intercettare
             decipher: null, // ID del giocatore che ha tentato di decifrare
@@ -75,6 +76,17 @@ function arraysEqual(a, b) {
 }
 
 function advanceTurn(gameState) {
+    // Salva la cronologia del turno prima di avanzare
+    if (gameState.turnHistory) {
+        gameState.history.push({
+            round: gameState.currentRound,
+            team: gameState.currentTeam,
+            clues: gameState.currentClues,
+            ...gameState.turnHistory // Aggiunge interceptionResult e decipherResult
+        });
+    }
+
+
     const nextTeam = gameState.currentTeam === 'white' ? 'black' : 'white';
     if (nextTeam === 'white') {
         gameState.currentRound++;
@@ -92,6 +104,7 @@ function advanceTurn(gameState) {
     gameState.currentClues = [];
     gameState.turnResult = null;
     gameState.attemptedPlayers = { interception: null, decipher: null }; // Resetta i tentativi
+    gameState.turnHistory = null;
     return gameState;
 }
 
@@ -103,21 +116,31 @@ function handleGuess(gameState, player, guess) {
 
     let newGameState = JSON.parse(JSON.stringify(gameState));
 
+    if (!newGameState.turnHistory) {
+        newGameState.turnHistory = { interceptionResult: null, decipherResult: null };
+    }
+
     if (phase === 'interception') {
         if (player.team !== opponentTeam) return { error: 'Non puoi intercettare in questo momento.' };
         if (attemptedPlayers.interception) return { error: 'Qualcuno della tua squadra ha già provato a intercettare.' };
 
         newGameState.attemptedPlayers.interception = player.id;
         const isCorrect = arraysEqual(guess, correctCode);
+        const result = {
+            type: isCorrect ? 'interception_success' : 'interception_fail',
+            player: player.name,
+            team: opponentTeam,
+            guess
+        };
+        newGameState.turnHistory.interceptionResult = result;
 
         if (isCorrect) {
             newGameState.teams[opponentTeam].score.interceptions++;
-            newGameState.turnResult = { type: 'interception_success', player: player.name, team: opponentTeam, guess };
             newGameState = advanceTurn(newGameState); // Il turno finisce
         } else {
-            newGameState.turnResult = { type: 'interception_fail', player: player.name, team: opponentTeam, guess };
             newGameState.phase = 'deciphering'; // Si passa alla fase di decifrazione
         }
+         newGameState.turnResult = result;
 
     } else if (phase === 'deciphering') {
         if (player.team !== currentTeam) return { error: 'Non è il turno della tua squadra per decifrare.' };
@@ -127,12 +150,20 @@ function handleGuess(gameState, player, guess) {
         newGameState.attemptedPlayers.decipher = player.id;
         const isCorrect = arraysEqual(guess, correctCode);
 
-        if (isCorrect) {
-            newGameState.turnResult = { type: 'decipher_success', player: player.name, team: currentTeam, guess };
-        } else {
+        const result = {
+            type: isCorrect ? 'decipher_success' : 'decipher_fail',
+            player: player.name,
+            team: currentTeam,
+            guess,
+            ...( !isCorrect && { correctCode })
+        };
+        newGameState.turnHistory.decipherResult = result;
+
+
+        if (!isCorrect) {
             newGameState.teams[currentTeam].score.mistakes++;
-            newGameState.turnResult = { type: 'decipher_fail', player: player.name, team: currentTeam, guess, correctCode };
         }
+        newGameState.turnResult = result;
         newGameState = advanceTurn(newGameState); // Il turno finisce comunque
 
     } else {
@@ -147,16 +178,6 @@ function handleGuess(gameState, player, guess) {
 
     if (newGameState.winner) {
         newGameState.phase = 'finished';
-    }
-
-    // Aggiungi l'evento alla cronologia solo se c'è stato un tentativo
-    if (newGameState.turnResult && (newGameState.turnResult.type.includes('interception') || newGameState.turnResult.type.includes('decipher'))) {
-        newGameState.history.push({
-            round: newGameState.currentRound,
-            team: newGameState.currentTeam,
-            clues: newGameState.currentClues,
-            result: newGameState.turnResult
-        });
     }
 
     return { gameState: newGameState };

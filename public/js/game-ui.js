@@ -55,6 +55,12 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Inserisci 3 numeri validi.');
             return;
         }
+        // Validazione per numeri non ripetuti
+        const uniqueGuess = new Set(guess);
+        if (uniqueGuess.size !== 3) {
+            alert('I numeri non devono essere ripetuti.');
+            return;
+        }
         window.socket.submitAttempt(guess);
         guessInputs.forEach(input => input.value = '');
     });
@@ -65,6 +71,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const guess = interceptionInputs.map(i => parseInt(i.value, 10));
         if (guess.some(isNaN)) {
             alert('Inserisci 3 numeri validi per intercettare.');
+            return;
+        }
+        // Validazione per numeri non ripetuti
+        const uniqueGuess = new Set(guess);
+        if (uniqueGuess.size !== 3) {
+            alert('I numeri non devono essere ripetuti.');
             return;
         }
         window.socket.submitAttempt(guess);
@@ -222,37 +234,59 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        history.forEach(entry => {
+        history.slice().reverse().forEach(entry => {
             const entryDiv = document.createElement('div');
             entryDiv.classList.add('history-entry');
 
-            const { round, clues, result } = entry;
-            const teamName = result.team === 'white' ? 'Bianca' : 'Nera';
-            let outcomeText = '';
+            const { round, team, clues, interceptionResult, decipherResult } = entry;
 
-            switch (result.type) {
-                case 'interception_success':
-                    outcomeText = `La squadra ${teamName} ha intercettato con successo con il codice ${result.guess.join('-')}.`;
-                    entryDiv.classList.add('success');
-                    break;
-                case 'interception_fail':
-                    outcomeText = `La squadra ${teamName} non è riuscita a intercettare con il codice ${result.guess.join('-')}.`;
-                    entryDiv.classList.add('fail');
-                    break;
-                case 'decipher_success':
-                    outcomeText = `La squadra ${teamName} ha decifrato con successo.`;
-                     entryDiv.classList.add('success');
-                    break;
-                case 'decipher_fail':
-                    outcomeText = `La squadra ${teamName} ha sbagliato la decifrazione. Il codice corretto era ${result.correctCode.join('-')}.`;
-                    entryDiv.classList.add('fail');
-                    break;
+            let interceptionHtml = '';
+            if (interceptionResult) {
+                const teamName = interceptionResult.team === 'white' ? 'Bianca' : 'Nera';
+                const outcome = interceptionResult.type === 'interception_success' ? 'success' : 'fail';
+                const text = outcome === 'success'
+                    ? `<strong>${interceptionResult.player}</strong> (Squadra ${teamName}) ha intercettato con <strong>${interceptionResult.guess.join('-')}</strong>.`
+                    : `<strong>${interceptionResult.player}</strong> (Squadra ${teamName}) non ha intercettato con <strong>${interceptionResult.guess.join('-')}</strong>.`;
+                interceptionHtml = `
+                    <div class="outcome-block interception-attempt ${outcome}">
+                        <p>Tentativo di Intercettazione</p>
+                        <p>${text}</p>
+                    </div>`;
             }
 
+            let decipherHtml = '';
+            if (decipherResult) {
+                const teamName = decipherResult.team === 'white' ? 'Bianca' : 'Nera';
+                const outcome = decipherResult.type === 'decipher_success' ? 'success' : 'fail';
+                let text = '';
+                if (outcome === 'success') {
+                    text = `<strong>${decipherResult.player}</strong> (Squadra ${teamName}) ha decifrato con <strong>${decipherResult.guess.join('-')}</strong>.`;
+                } else {
+                    text = `<strong>${decipherResult.player}</strong> (Squadra ${teamName}) non ha decifrato. Il codice era <strong>${decipherResult.correctCode.join('-')}</strong>.`;
+                }
+                decipherHtml = `
+                    <div class="outcome-block decipher-attempt ${outcome}">
+                        <p>Tentativo di Decifrazione</p>
+                        <p>${text}</p>
+                    </div>`;
+            } else if (interceptionResult && interceptionResult.type === 'interception_success') {
+                 decipherHtml = `
+                    <div class="outcome-block decipher-attempt">
+                        <p>Tentativo di Decifrazione non effettuato.</p>
+                    </div>`;
+            }
+
+
             entryDiv.innerHTML = `
-                <p><strong>Round ${round}</strong></p>
-                <p>Indizi: ${clues.join(', ')}</p>
-                <p>${outcomeText}</p>
+                <div class="history-entry-header">
+                    <strong>Round ${round}</strong>
+                    <span class="team-name team-${team}">Turno Squadra ${team === 'white' ? 'Bianca' : 'Nera'}</span>
+                </div>
+                <p class="history-clues">Indizi: ${clues.join(', ')}</p>
+                <div class="history-outcome">
+                    ${interceptionHtml}
+                    ${decipherHtml}
+                </div>
             `;
             gameHistory.appendChild(entryDiv);
         });
