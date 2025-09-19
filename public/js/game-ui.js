@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const guesserArea = document.getElementById('guesser-area');
     const interceptionArea = document.getElementById('interception-area');
     const cluesDisplayArea = document.getElementById('clues-display-area');
+    const cluesTitle = document.getElementById('clues-title');
     const cluesList = document.getElementById('clues-list');
     const turnStatusArea = document.getElementById('turn-status-area');
     const turnStatusMessage = document.getElementById('turn-status-message');
@@ -30,6 +31,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const gameHistory = document.getElementById('game-history');
 
     const secretCodeDisplay = document.getElementById('secret-code-display');
+    const cluesError = document.getElementById('clues-error');
+    const guessError = document.getElementById('guess-error');
+    const interceptionError = document.getElementById('interception-error');
+
+    function showTemporaryError(element, message) {
+        element.textContent = message;
+        setTimeout(() => {
+            element.textContent = '';
+        }, 3000);
+    }
+
     const submitCluesBtn = document.getElementById('submit-clues-btn');
     const clueInputs = [
         document.getElementById('clue-1'),
@@ -40,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
     submitCluesBtn.addEventListener('click', () => {
         const clues = clueInputs.map(input => input.value.trim());
         if (clues.some(clue => !clue)) {
-            alert('Per favore, inserisci tutti e tre gli indizi.');
+            showTemporaryError(cluesError, 'Per favore, inserisci tutti e tre gli indizi.');
             return;
         }
         window.socket.submitClues(clues);
@@ -52,13 +64,13 @@ document.addEventListener('DOMContentLoaded', () => {
     submitGuessBtn.addEventListener('click', () => {
         const guess = guessInputs.map(i => parseInt(i.value, 10));
         if (guess.some(isNaN)) {
-            alert('Inserisci 3 numeri validi.');
+            showTemporaryError(guessError, 'Inserisci 3 numeri validi.');
             return;
         }
         // Validazione per numeri non ripetuti
         const uniqueGuess = new Set(guess);
         if (uniqueGuess.size !== 3) {
-            alert('I numeri non devono essere ripetuti.');
+            showTemporaryError(guessError, 'I numeri non devono essere ripetuti.');
             return;
         }
         window.socket.submitAttempt(guess);
@@ -70,13 +82,13 @@ document.addEventListener('DOMContentLoaded', () => {
     submitInterceptionBtn.addEventListener('click', () => {
         const guess = interceptionInputs.map(i => parseInt(i.value, 10));
         if (guess.some(isNaN)) {
-            alert('Inserisci 3 numeri validi per intercettare.');
+            showTemporaryError(interceptionError, 'Inserisci 3 numeri validi per intercettare.');
             return;
         }
         // Validazione per numeri non ripetuti
         const uniqueGuess = new Set(guess);
         if (uniqueGuess.size !== 3) {
-            alert('I numeri non devono essere ripetuti.');
+            showTemporaryError(interceptionError, 'I numeri non devono essere ripetuti.');
             return;
         }
         window.socket.submitAttempt(guess);
@@ -171,8 +183,22 @@ document.addEventListener('DOMContentLoaded', () => {
         // Mostra parole chiave
         whiteTeamPanel.style.display = playerTeam === 'white' ? 'block' : 'none';
         blackTeamPanel.style.display = playerTeam === 'black' ? 'block' : 'none';
-        if (playerTeam === 'white') whiteKeywordsList.innerHTML = gameState.teams.white.keywords.map((kw, i) => `<li>${i + 1}. ${kw}</li>`).join('');
-        if (playerTeam === 'black') blackKeywordsList.innerHTML = gameState.teams.black.keywords.map((kw, i) => `<li>${i + 1}. ${kw}</li>`).join('');
+
+        const renderKeywords = (keywords) => {
+            return keywords.map((kw, i) => `
+                <li>
+                    <span class="keyword-number">${i + 1}</span>
+                    <span class="keyword-text">${kw}</span>
+                </li>
+            `).join('');
+        };
+
+        if (playerTeam === 'white') {
+            whiteKeywordsList.innerHTML = renderKeywords(gameState.teams.white.keywords);
+        }
+        if (playerTeam === 'black') {
+            blackKeywordsList.innerHTML = renderKeywords(gameState.teams.black.keywords);
+        }
 
         // Nascondi tutte le aree di azione
         communicatorArea.style.display = 'none';
@@ -211,6 +237,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } else {
             cluesDisplayArea.style.display = 'block';
+            const communicatorName = players.find(p => p.id === gameState.communicators[gameState.currentTeam]).name;
+            cluesTitle.textContent = `Indizi di ${communicatorName}:`;
             cluesList.innerHTML = gameState.currentClues.map(c => `<li>${c}</li>`).join('');
 
             if (gameState.phase === 'interception') {
