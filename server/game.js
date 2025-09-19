@@ -56,12 +56,18 @@ function startGame(room) {
 }
 
 function handleClueSubmission(gameState, player, clues) {
-    const { currentTeam, communicators } = gameState;
+    const { currentTeam, communicators, currentRound } = gameState;
     if (player.id !== communicators[currentTeam]) return { error: 'Non sei il comunicatore.' };
     if (gameState.phase !== 'clue-giving') return { error: 'Non è la fase di dare gli indizi.' };
 
     const newGameState = JSON.parse(JSON.stringify(gameState));
-    newGameState.phase = 'interception'; // La prima fase dopo gli indizi è l'intercettazione
+    // REGOLA UFFICIALE: "Durante il primo round, la Squadra Nera non cerca di intercettare il codice della Squadra Bianca."
+    // Questa logica si applica a entrambe le squadre nel primo round, dato che il round non avanza fino al turno della squadra bianca.
+    if (currentRound === 1) {
+        newGameState.phase = 'deciphering';
+    } else {
+        newGameState.phase = 'interception'; // La prima fase dopo gli indizi è l'intercettazione
+    }
     newGameState.currentClues = clues;
     newGameState.turnResult = { type: 'clue_submission', player: player.name, team: currentTeam };
     return { gameState: newGameState };
@@ -110,14 +116,17 @@ function handleGuess(gameState, player, guess) {
         newGameState.attemptedPlayers.interception = player.id;
         const isCorrect = arraysEqual(guess, correctCode);
 
+        // REGOLA UFFICIALE: "Quindi, è possibile che nello stesso round una squadra riceva un segnalino Comunicazione Errata...
+        // e che la squadra avversaria riceva un segnalino Intercettazione..."
+        // Questo significa che un'intercettazione (riuscita o meno) non termina il turno.
+        // La squadra che ha dato gli indizi deve sempre tentare di decifrare.
         if (isCorrect) {
             newGameState.teams[opponentTeam].score.interceptions++;
             newGameState.turnResult = { type: 'interception_success', player: player.name, team: opponentTeam, guess };
-            newGameState = advanceTurn(newGameState); // Il turno finisce
         } else {
             newGameState.turnResult = { type: 'interception_fail', player: player.name, team: opponentTeam, guess };
-            newGameState.phase = 'deciphering'; // Si passa alla fase di decifrazione
         }
+        newGameState.phase = 'deciphering'; // Si passa alla fase di decifrazione
 
     } else if (phase === 'deciphering') {
         if (player.team !== currentTeam) return { error: 'Non è il turno della tua squadra per decifrare.' };
