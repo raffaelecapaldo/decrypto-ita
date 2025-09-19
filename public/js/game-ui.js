@@ -174,6 +174,10 @@ document.addEventListener('DOMContentLoaded', () => {
         turnStatusArea.style.display = 'none';
         document.getElementById('game-over-area').style.display = 'none';
 
+        if (gameState.currentRound === 1 && !gameState.turnResult) {
+            gameLogList.innerHTML = '';
+        }
+
         updateGameLog(gameState, players);
         renderHistory(gameState.history);
 
