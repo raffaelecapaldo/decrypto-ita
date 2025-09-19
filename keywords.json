@@ -1,0 +1,14 @@
+{
+  "it": [
+    "Cane", "Gatto", "Tavolo", "Sedia", "Libro", "Scuola", "Musica", "Arte", "Viaggio", "Amore",
+    "Sole", "Luna", "Stella", "Fiume", "Montagna", "Mare", "Spiaggia", "Città", "Paese", "Strada",
+    "Casa", "Porta", "Finestra", "Letto", "Cucina", "Bagno", "Giardino", "Fiore", "Albero", "Frutto",
+    "Colore", "Numero", "Lettera", "Parola", "Frase", "Domanda", "Risposta", "Inizio", "Fine", "Tempo",
+    "Giorno", "Notte", "Mattina", "Pomeriggio", "Sera", "Ieri", "Oggi", "Domani", "Settimana", "Mese",
+    "Anno", "Stagione", "Primavera", "Estate", "Autunno", "Inverno", "Caldo", "Freddo", "Luce", "Buio",
+    "Silenzio", "Rumore", "Voce", "Suono", "Odore", "Sapore", "Tatto", "Vista", "Udito", "Pensiero",
+    "Sogno", "Realtà", "Verità", "Menzogna", "Paura", "Coraggio", "Gioia", "Tristezza", "Rabbia", "Pace",
+    "Guerra", "Amico", "Nemico", "Famiglia", "Lavoro", "Gioco", "Sport", "Salute", "Malattia", "Vita",
+    "Morte", "Nascita", "Crescita", "Cambiamento", "Storia", "Futuro", "Passato", "Presente", "Ricordo", "Speranza"
+  ]
+}

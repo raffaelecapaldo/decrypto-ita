@@ -1,0 +1,71 @@
+/* Stili specifici per l'interfaccia di gioco */
+.game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #eee;
+}
+
+.score-panel {
+    flex: 1;
+    text-align: center;
+}
+
+.round-indicator {
+    flex: 1.5;
+    text-align: center;
+}
+
+.game-main {
+    display: flex;
+    justify-content: space-around;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.team-panel {
+    flex: 1;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.keywords-list {
+    list-style-type: none;
+    padding: 0;
+}
+
+.keywords-list li {
+    font-size: 1.1rem;
+    margin-bottom: 5px;
+}
+
+.player-action-area {
+    display: none; /* Nascosto di default */
+    padding: 20px;
+    background-color: #f9f9f9;
+    border: 1px solid #e3e3e3;
+    border-radius: 5px;
+    margin-top: 20px;
+    text-align: center;
+}
+
+.clue-inputs {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin: 15px 0;
+}
+
+.clue-inputs input {
+    width: 100%;
+    max-width: 200px;
+}
+
+.code {
+    font-weight: bold;
+    font-size: 1.2rem;
+    color: var(--accent-color);
+}
