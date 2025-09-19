@@ -52,9 +52,9 @@
         window.app.showSection('lobby');
     });
 
-    socket.on('updateLobby', (players) => {
-        console.log('Aggiornamento lobby:', players);
-        window.ui.updateLobby(players);
+    socket.on('updateLobby', (data) => {
+        console.log('Aggiornamento lobby:', data);
+        window.ui.updateLobby(data);
     });
 
     socket.on('gameStarted', ({ gameState, players }) => {

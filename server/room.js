@@ -34,6 +34,7 @@ function createRoom(socketId, nickname) {
     rooms[roomCode] = {
         id: roomCode,
         players: [player],
+        creatorId: socketId, // Aggiunto creatorId
         gameState: null, // Game state will be added later
         createdAt: new Date(),
         status: 'waiting',
