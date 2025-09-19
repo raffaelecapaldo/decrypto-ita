@@ -1,4 +1,4 @@
-(function() {
+document.addEventListener('DOMContentLoaded', () => {
     // Elementi della Lobby
     const whiteTeamList = document.getElementById('white-team-list');
     const blackTeamList = document.getElementById('black-team-list');
@@ -259,4 +259,4 @@
     }
 
     window.ui = { updateLobby, renderGameState };
-})();
+});
