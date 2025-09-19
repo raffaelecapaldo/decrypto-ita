@@ -87,7 +87,10 @@ io.on('connection', (socket) => {
 
     room.status = 'playing';
     room.gameState = gameState;
-    broadcastGameStateUpdate(room); // Usa la nuova funzione di broadcast
+    room.players.forEach(player => {
+        const filteredGameState = filterGameStateForPlayer(room.gameState, room.players, player.socketId);
+        io.to(player.socketId).emit('gameStarted', { gameState: filteredGameState, players: room.players });
+    });
     console.log(`[Socket.IO] Game started in room ${roomCode}`);
   });
 
