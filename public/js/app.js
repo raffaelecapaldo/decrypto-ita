@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
             sections[key].classList.remove('active');
         });
         if (sections[sectionName]) {
-            sections[key].classList.add('active');
+            sections[sectionName].classList.add('active');
         }
         // Pulisci i messaggi di errore quando cambi sezione
         errorMessage.textContent = '';
