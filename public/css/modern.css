@@ -249,6 +249,10 @@ button:disabled {
     background-color: var(--team-black-bg);
 }
 
+#lobby-section #white-team h3, #lobby-section #white-team li {
+    color: var(--team-white-text);
+}
+
 #lobby-section #black-team h3, #lobby-section #black-team li {
     color: var(--team-black-text);
 }
@@ -504,7 +508,6 @@ button:disabled {
     font-weight: bold;
     padding: 5px 12px;
     border-radius: 16px;
-    color: #fff;
     font-size: 0.9rem;
 }
 
