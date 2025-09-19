@@ -83,10 +83,18 @@ document.addEventListener('DOMContentLoaded', () => {
         interceptionInputs.forEach(input => input.value = '');
     });
 
-    function updateLobby(players) {
+    function updateLobby({ players, creatorId }) {
         whiteTeamList.innerHTML = '';
         blackTeamList.innerHTML = '';
         const ownSocketId = window.socket.getId();
+        const startGameBtn = document.getElementById('start-game-btn');
+
+        // Mostra il pulsante "Avvia Partita" solo al creatore della stanza
+        if (ownSocketId === creatorId) {
+            startGameBtn.style.display = 'block';
+        } else {
+            startGameBtn.style.display = 'none';
+        }
 
         players.forEach(p => {
             const li = document.createElement('li');

@@ -55,7 +55,7 @@ io.on('connection', (socket) => {
     socket.join(roomCode);
     socket.emit('roomCreated', { roomCode });
     const room = RoomManager.getRoom(roomCode);
-    io.to(roomCode).emit('updateLobby', room.players);
+    io.to(roomCode).emit('updateLobby', { players: room.players, creatorId: room.creatorId });
   });
 
   socket.on('joinRoom', ({ nickname, roomCode }) => {
@@ -66,7 +66,7 @@ io.on('connection', (socket) => {
     }
     socket.join(roomCode);
     socket.emit('joinSuccess', { roomCode });
-    io.to(roomCode).emit('updateLobby', room.players);
+    io.to(roomCode).emit('updateLobby', { players: room.players, creatorId: room.creatorId });
   });
 
   socket.on('joinTeam', ({ roomCode, team }) => {
@@ -75,12 +75,17 @@ io.on('connection', (socket) => {
         socket.emit('error', error);
         return;
     }
-    io.to(roomCode).emit('updateLobby', room.players);
+    io.to(roomCode).emit('updateLobby', { players: room.players, creatorId: room.creatorId });
   });
 
   socket.on('startGame', ({ roomCode }) => {
     const room = RoomManager.getRoom(roomCode);
     if (!room) return socket.emit('error', 'Stanza non trovata.');
+
+    // Solo il creatore della stanza può avviare la partita
+    if (room.creatorId !== socket.id) {
+        return socket.emit('error', 'Solo il creatore della stanza può avviare la partita.');
+    }
 
     const { gameState, error } = GameManager.startGame(room);
     if (error) return socket.emit('error', error);
@@ -129,7 +134,7 @@ io.on('connection', (socket) => {
     const result = RoomManager.leaveRoom(socket.id);
     if (result) {
       const { roomCode, room } = result;
-      io.to(roomCode).emit('updateLobby', room.players);
+      io.to(roomCode).emit('updateLobby', { players: room.players, creatorId: room.creatorId });
     }
   });
 });
