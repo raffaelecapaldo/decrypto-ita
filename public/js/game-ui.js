@@ -177,10 +177,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="round-container" id="round-${team}-${i}">
                         <div class="round-header">
                             <span class="round-number"># ${i.toString().padStart(2, '0')}</span>
-                            <div class="code-icons">
-                                <span class="icon" id="guess-code-${team}-${i}">?</span>
-                                <span class="icon" id="actual-code-${team}-${i}">💾</span>
-                            </div>
                         </div>
                         <div class="round-clues" id="clues-${team}-${i}"></div>
                     </div>
@@ -233,20 +229,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 opponentCluesContainer.innerHTML = generateClueTable(clues, opponentGuess, correctCode);
             }
 
-            // Update main code icons
-            if (teamGuess) {
-                document.getElementById(`guess-code-${team}-${round}`).textContent = teamGuess.join('-');
-            }
-            if (opponentGuess) {
-                document.getElementById(`guess-code-${opponent}-${round}`).textContent = opponentGuess.join('-');
-            } else if (round === 1) {
-                document.getElementById(`guess-code-${opponent}-${round}`).textContent = 'X-X-X';
-            }
-
             if (correctCode) {
-                document.getElementById(`actual-code-${team}-${round}`).textContent = correctCode.join('-');
-                document.getElementById(`actual-code-${opponent}-${round}`).textContent = correctCode.join('-');
-
                 // Populate summary lists
                 correctCode.forEach((code, index) => {
                     const summaryList = document.getElementById(`summary-${team}-${code}`);
