@@ -10,6 +10,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const whiteMistakes = document.getElementById('white-mistakes');
     const blackInterceptions = document.getElementById('black-interceptions');
     const blackMistakes = document.getElementById('black-mistakes');
+    const playerUsername = document.getElementById('player-username');
+    const whiteTeamMembers = document.getElementById('white-team-members');
+    const blackTeamMembers = document.getElementById('black-team-members');
     const whiteKeywordsList = document.getElementById('white-keywords');
     const blackKeywordsList = document.getElementById('black-keywords');
     const whiteTeamPanel = document.getElementById('white-team-panel');
@@ -122,42 +125,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function updateGameLog(gameState, players) {
-        const { turnResult } = gameState;
-        if (!turnResult) {
-            gameLogArea.style.display = 'none';
-            return;
-        }
-
-        gameLogArea.style.display = 'block';
-        const li = document.createElement('li');
-        const teamName = turnResult.team === 'white' ? 'Bianca' : 'Nera';
-
-        switch (turnResult.type) {
-            case 'clue_submission':
-                li.innerHTML = `<strong>${turnResult.player}</strong> (Squadra ${teamName}) ha dato gli indizi.`;
-                break;
-            case 'interception_success':
-                li.innerHTML = `<strong>${turnResult.player}</strong> (Squadra ${teamName}) ha intercettato con successo il codice! (+1 punto intercettazione)`;
-                break;
-            case 'interception_fail':
-                li.innerHTML = `<strong>${turnResult.player}</strong> (Squadra ${teamName}) ha provato a intercettare ma ha sbagliato.`;
-                break;
-            case 'decipher_success':
-                li.innerHTML = `<strong>${turnResult.player}</strong> (Squadra ${teamName}) ha decifrato correttamente il codice!`;
-                break;
-            case 'decipher_fail':
-                li.innerHTML = `<strong>${turnResult.player}</strong> (Squadra ${teamName}) ha sbagliato a decifrare. Il codice era ${turnResult.correctCode.join('-')}. (+1 punto errore)`;
-                break;
-        }
-        // Aggiungi il nuovo log in cima alla lista
-        if (gameLogList.firstChild) {
-            gameLogList.insertBefore(li, gameLogList.firstChild);
-        } else {
-            gameLogList.appendChild(li);
-        }
-    }
-
     function renderGameState(gameState, players, ownSocketId) {
         const currentPlayer = players.find(p => p.socketId === ownSocketId);
         if (!currentPlayer) return;
@@ -167,9 +134,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const opponentTeam = playerTeam === 'white' ? 'black' : 'white';
         const isCommunicator = gameState.communicators[playerTeam] === currentPlayer.id;
 
-        const whiteCommPlayer = players.find(p => p.id === gameState.communicators.white);
-        const blackCommPlayer = players.find(p => p.id === gameState.communicators.black);
-
         // Aggiornamenti generali
         roundNumber.textContent = gameState.currentRound;
         currentTeamDisplay.textContent = gameState.currentTeam === 'white' ? 'Bianca' : 'Nera';
@@ -177,8 +141,23 @@ document.addEventListener('DOMContentLoaded', () => {
         whiteMistakes.textContent = gameState.teams.white.score.mistakes;
         blackInterceptions.textContent = gameState.teams.black.score.interceptions;
         blackMistakes.textContent = gameState.teams.black.score.mistakes;
-        document.getElementById('white-communicator-name').textContent = whiteCommPlayer ? `${whiteCommPlayer.name}` : 'N/A';
-        document.getElementById('black-communicator-name').textContent = blackCommPlayer ? `${blackCommPlayer.name}` : 'N/A';
+        playerUsername.textContent = currentPlayer.name;
+
+        // Aggiorna membri squadre
+        whiteTeamMembers.innerHTML = '';
+        blackTeamMembers.innerHTML = '';
+        players.forEach(p => {
+            const li = document.createElement('li');
+            li.textContent = p.name;
+            if (p.id === gameState.communicators[p.team]) {
+                li.classList.add('communicator');
+            }
+            if (p.team === 'white') {
+                whiteTeamMembers.appendChild(li);
+            } else if (p.team === 'black') {
+                blackTeamMembers.appendChild(li);
+            }
+        });
 
         // Mostra parole chiave
         whiteTeamPanel.style.display = playerTeam === 'white' ? 'block' : 'none';
@@ -212,7 +191,6 @@ document.addEventListener('DOMContentLoaded', () => {
             gameLogList.innerHTML = '';
         }
 
-        updateGameLog(gameState, players);
         renderHistory(gameState.history);
 
         const currentCommunicator = players.find(p => p.id === gameState.communicators[gameState.currentTeam]);

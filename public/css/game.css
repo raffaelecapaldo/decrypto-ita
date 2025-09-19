@@ -8,9 +8,62 @@
     border-bottom: 2px solid #eee;
 }
 
-.score-panel {
+.team-info-panel {
     flex: 1;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: var(--bg-color-offset);
     text-align: center;
+}
+
+.team-name {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 1.2rem;
+    color: var(--text-color);
+}
+
+.team-stats {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 10px;
+}
+
+.stat {
+    text-align: center;
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-color-muted);
+}
+
+.stat-value {
+    font-size: 1.4rem;
+    font-weight: bold;
+}
+
+.team-members {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    text-align: center;
+}
+
+.team-members li {
+    padding: 2px 0;
+}
+
+.communicator {
+    font-weight: bold;
+    color: var(--accent-color);
+}
+
+.player-info {
+    margin-top: 10px;
+    font-size: 0.9rem;
 }
 
 .round-indicator {
