@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decrypto Online</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/game.css">
+    <link rel="stylesheet" href="css/mobile.css">
+    <link rel="stylesheet" href="css/history.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Sezione Home -->
+        <section id="home-section" class="active">
+            <h1>Decrypto Online</h1>
+            <div class="form-container">
+                <div class="form-box">
+                    <h2>Crea una Nuova Partita</h2>
+                    <input type="text" id="create-nickname" placeholder="Il tuo Nickname">
+                    <button id="create-room-btn">Crea Partita</button>
+                </div>
+                <div class="form-box">
+                    <h2>Unisciti a una Partita</h2>
+                    <input type="text" id="join-nickname" placeholder="Il tuo Nickname">
+                    <input type="text" id="room-code-input" placeholder="Codice Stanza">
+                    <button id="join-room-btn">Unisciti</button>
+                </div>
+            </div>
+            <div id="error-message" class="error"></div>
+        </section>
+
+        <!-- Sezione Lobby -->
+        <section id="lobby-section">
+            <h2>Lobby - Codice Stanza: <span id="room-code-display"></span></h2>
+            <div class="lobby-container">
+                <div id="white-team" class="team-box">
+                    <h3>Squadra Bianca</h3>
+                    <ul id="white-team-list"></ul>
+                    <button class="join-team-btn" data-team="white">Unisciti alla Squadra Bianca</button>
+                </div>
+                <div id="black-team" class="team-box">
+                    <h3>Squadra Nera</h3>
+                    <ul id="black-team-list"></ul>
+                    <button class="join-team-btn" data-team="black">Unisciti alla Squadra Nera</button>
+                </div>
+            </div>
+            <div class="lobby-footer">
+                <button id="start-game-btn">Avvia Partita</button>
+            </div>
+        </section>
+
+        <!-- Sezione Gioco -->
+        <section id="game-section">
+            <header class="game-header">
+                <div class="score-panel">
+                    <span>Squadra Bianca: <span id="white-interceptions">0</span> Intercettazioni, <span id="white-mistakes">0</span> Errori</span>
+                    <br><small>Comunicatore: <span id="white-communicator-name"></span></small>
+                </div>
+                <div class="round-indicator">
+                    <h3>Round <span id="round-number">1</span></h3>
+                    <p>Turno della squadra: <span id="current-team-display"></span></p>
+                </div>
+                <div class="score-panel">
+                    <span>Squadra Nera: <span id="black-interceptions">0</span> Intercettazioni, <span id="black-mistakes">0</span> Errori</span>
+                    <br><small>Comunicatore: <span id="black-communicator-name"></span></small>
+                </div>
+            </header>
+
+            <main class="game-main">
+                <div class="team-panel" id="white-team-panel">
+                    <h4>Le tue Parole Chiave (Squadra Bianca)</h4>
+                    <ul id="white-keywords" class="keywords-list">
+                        <!-- li>1. Parola1</li> -->
+                    </ul>
+                </div>
+                <div class="team-panel" id="black-team-panel">
+                    <h4>Le tue Parole Chiave (Squadra Nera)</h4>
+                    <ul id="black-keywords" class="keywords-list">
+                        <!-- li>1. Parola1</li> -->
+                    </ul>
+                </div>
+            </main>
+
+            <div id="communicator-area" class="player-action-area">
+                <h4>Sei il Comunicatore!</h4>
+                <p>Il tuo codice segreto è: <span id="secret-code-display" class="code"></span></p>
+                <p>Scrivi 3 indizi per far indovinare questo codice alla tua squadra.</p>
+                <div class="clue-inputs">
+                    <input type="text" id="clue-1" placeholder="Indizio per la parola X">
+                    <input type="text" id="clue-2" placeholder="Indizio per la parola Y">
+                    <input type="text" id="clue-3" placeholder="Indizio per la parola Z">
+                </div>
+                <button id="submit-clues-btn">Invia Indizi</button>
+            </div>
+
+            <div id="clues-display-area" class="player-action-area">
+                <h4>Indizi del turno</h4>
+                <div id="clues-list"></div>
+            </div>
+
+            <div id="turn-status-area" class="player-action-area" style="text-align: center;">
+                <p id="turn-status-message" style="font-weight: bold;"></p>
+                <p id="turn-phase-message"></p>
+            </div>
+
+            <div id="game-log-area" class="player-action-area">
+                <h4>Log Eventi</h4>
+                <ul id="game-log-list"></ul>
+            </div>
+
+            <div id="guesser-area" class="player-action-area">
+                <h4>Indovina il codice</h4>
+                <p>Inserisci i 3 numeri che pensi corrispondano agli indizi.</p>
+                <div class="guess-inputs">
+                    <input type="number" min="1" max="4" id="guess-1">
+                    <input type="number" min="1" max="4" id="guess-2">
+                    <input type="number" min="1" max="4" id="guess-3">
+                </div>
+                <button id="submit-guess-btn">Invia Codice</button>
+            </div>
+
+            <div id="interception-area" class="player-action-area">
+                <h4>Tenta l'intercettazione</h4>
+                <p>Prova a indovinare il codice della squadra avversaria!</p>
+                 <div class="guess-inputs">
+                    <input type="number" min="1" max="4" id="intercept-1">
+                    <input type="number" min="1" max="4" id="intercept-2">
+                    <input type="number" min="1" max="4" id="intercept-3">
+                </div>
+                <button id="submit-interception-btn">Tenta l'intercettazione</button>
+            </div>
+             <div id="history-area" class="history-area player-action-area">
+                <h4>Storico</h4>
+                <div id="game-history"></div>
+            </div>
+
+            <div id="game-over-area" class="player-action-area">
+                <h2>Partita Terminata!</h2>
+                <p>La squadra <strong id="winner-display"></strong> ha vinto!</p>
+                <button id="play-again-btn">Gioca Ancora</button>
+            </div>
+        </section>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/socket-client.js"></script>
+    <script src="js/game-ui.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
