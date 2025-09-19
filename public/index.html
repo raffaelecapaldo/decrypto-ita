@@ -60,17 +60,42 @@
         <!-- Sezione Gioco -->
         <section id="game-section">
             <header class="game-header">
-                <div class="score-panel">
-                    <span>Squadra Bianca: <span id="white-interceptions">0</span> Intercettazioni, <span id="white-mistakes">0</span> Errori</span>
-                    <br><small>Comunicatore: <span id="white-communicator-name"></span></small>
+                <div class="team-info-panel">
+                    <h3 class="team-name">Squadra Bianca</h3>
+                    <div class="team-stats">
+                        <div class="stat">
+                            <span class="stat-label">Intercettazioni</span>
+                            <span class="stat-value" id="white-interceptions">0</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Errori</span>
+                            <span class="stat-value" id="white-mistakes">0</span>
+                        </div>
+                    </div>
+                    <ul class="team-members" id="white-team-members"></ul>
                 </div>
+
                 <div class="round-indicator">
                     <h3>Round <span id="round-number">1</span></h3>
-                    <p>Turno della squadra: <span id="current-team-display"></span></p>
+                    <p>Turno: <strong id="current-team-display"></strong></p>
+                    <div class="player-info">
+                        Giocatore: <strong id="player-username">N/D</strong>
+                    </div>
                 </div>
-                <div class="score-panel">
-                    <span>Squadra Nera: <span id="black-interceptions">0</span> Intercettazioni, <span id="black-mistakes">0</span> Errori</span>
-                    <br><small>Comunicatore: <span id="black-communicator-name"></span></small>
+
+                <div class="team-info-panel">
+                    <h3 class="team-name">Squadra Nera</h3>
+                    <div class="team-stats">
+                        <div class="stat">
+                            <span class="stat-label">Intercettazioni</span>
+                            <span class="stat-value" id="black-interceptions">0</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Errori</span>
+                            <span class="stat-value" id="black-mistakes">0</span>
+                        </div>
+                    </div>
+                    <ul class="team-members" id="black-team-members"></ul>
                 </div>
             </header>
 
