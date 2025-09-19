@@ -142,10 +142,8 @@ function handleGuess(gameState, player, guess) {
 
         if (isCorrect) {
             newGameState.teams[opponentTeam].score.interceptions++;
-            newGameState = advanceTurn(newGameState); // Il turno finisce
-        } else {
-            newGameState.phase = 'deciphering'; // Si passa alla fase di decifrazione
         }
+        newGameState.phase = 'deciphering'; // Si passa sempre alla fase di decifrazione
          newGameState.turnResult = result;
 
     } else if (phase === 'deciphering') {
