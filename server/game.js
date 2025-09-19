@@ -5,17 +5,18 @@ const keywordsData = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'keyw
 const allKeywords = keywordsData.it;
 
 function shuffle(array) {
-    for (let i = array.length - 1; i > 0; i--) {
+    const newArray = [...array];
+    for (let i = newArray.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
+        [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
     }
-    return array;
+    return newArray;
 }
 
 function generateSecretCode() {
     const numbers = [1, 2, 3, 4];
-    shuffle(numbers);
-    return numbers.slice(0, 3);
+    const shuffledNumbers = shuffle(numbers);
+    return shuffledNumbers.slice(0, 3);
 }
 
 function startGame(room) {
@@ -25,7 +26,7 @@ function startGame(room) {
     if (whiteTeam.length < 1 || blackTeam.length < 1) return { error: 'Entrambe le squadre devono avere almeno un giocatore.' };
     if (room.players.length < 3) return { error: 'Sono necessari almeno 3 giocatori per iniziare.' };
 
-    const shuffledKeywords = shuffle([...allKeywords]);
+    const shuffledKeywords = shuffle(allKeywords);
 
     const gameState = {
         currentRound: 1,
