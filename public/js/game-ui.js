@@ -182,8 +182,22 @@ document.addEventListener('DOMContentLoaded', () => {
         // Mostra parole chiave
         whiteTeamPanel.style.display = playerTeam === 'white' ? 'block' : 'none';
         blackTeamPanel.style.display = playerTeam === 'black' ? 'block' : 'none';
-        if (playerTeam === 'white') whiteKeywordsList.innerHTML = gameState.teams.white.keywords.map((kw, i) => `<li>${i + 1}. ${kw}</li>`).join('');
-        if (playerTeam === 'black') blackKeywordsList.innerHTML = gameState.teams.black.keywords.map((kw, i) => `<li>${i + 1}. ${kw}</li>`).join('');
+
+        const renderKeywords = (keywords) => {
+            return keywords.map((kw, i) => `
+                <li>
+                    <span class="keyword-number">${i + 1}</span>
+                    <span class="keyword-text">${kw}</span>
+                </li>
+            `).join('');
+        };
+
+        if (playerTeam === 'white') {
+            whiteKeywordsList.innerHTML = renderKeywords(gameState.teams.white.keywords);
+        }
+        if (playerTeam === 'black') {
+            blackKeywordsList.innerHTML = renderKeywords(gameState.teams.black.keywords);
+        }
 
         // Nascondi tutte le aree di azione
         communicatorArea.style.display = 'none';
@@ -222,7 +236,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } else {
             cluesDisplayArea.style.display = 'block';
-            cluesList.innerHTML = gameState.currentClues.map(c => `<li>${c}</li>`).join('');
+            const communicatorName = players.find(p => p.id === gameState.communicators[gameState.currentTeam]).name;
+            cluesList.innerHTML = `<h4>Indizi di ${communicatorName}:</h4>` + gameState.currentClues.map(c => `<li>${c}</li>`).join('');
 
             if (gameState.phase === 'interception') {
                 const attemptedPlayer = players.find(p => p.id === gameState.attemptedPlayers.interception);

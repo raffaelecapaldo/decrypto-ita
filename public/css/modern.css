@@ -349,16 +349,29 @@ button:disabled {
 #game-section .keywords-list {
     list-style-type: none;
     padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1rem;
 }
 
 #game-section .keywords-list li {
+    background-color: var(--bg-color-offset);
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--card-shadow);
+    text-align: center;
     font-size: 1.1rem;
-    padding: 0.5rem;
-    border-bottom: 1px solid var(--border-color);
+    font-weight: 500;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
 }
 
-#game-section .keywords-list li:last-child {
-    border-bottom: none;
+#game-section .keywords-list li .keyword-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--accent-color);
 }
 
 /* Player Action Areas */
@@ -388,6 +401,32 @@ button:disabled {
     justify-content: center;
     margin: 1.5rem 0;
     flex-wrap: wrap;
+}
+
+#clues-display-area {
+    background-color: var(--bg-color);
+    padding: 2rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+#clues-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+#clues-list li {
+    background-color: var(--bg-color-offset);
+    padding: 1rem 1.5rem;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    font-size: 1.1rem;
+    text-align: left;
+    box-shadow: var(--card-shadow);
 }
 
 .clue-inputs input, .guess-inputs input {
@@ -545,4 +584,33 @@ button:disabled {
 #game-over-area p {
     font-size: 1.2rem;
     margin-bottom: 2rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    body {
+        padding: 1rem;
+    }
+
+    section {
+        padding: 1.5rem;
+    }
+
+    #game-section .game-main {
+        grid-template-columns: 1fr;
+    }
+
+    #game-section .keywords-list {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+
+    .clue-inputs, .guess-inputs {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .clue-inputs input, .guess-inputs input {
+        max-width: 100%;
+    }
 }
