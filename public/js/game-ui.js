@@ -149,6 +149,20 @@ document.addEventListener('DOMContentLoaded', () => {
             { name: opponentTeam, title: `Squadra ${opponentTeam === 'white' ? 'Bianca' : 'Nera'}` }
         ];
 
+        function generateClueTable(clues, guess, correctCode) {
+            let table = '<table class="clue-detail-table">';
+            table += '<thead><tr><th>Indizio</th><th>Tentativo</th><th>Reale</th></tr></thead>';
+            table += '<tbody>';
+            for (let i = 0; i < 3; i++) {
+                const clue = clues[i] || '';
+                const guessedNum = guess ? guess[i] : '-';
+                const actualNum = correctCode ? correctCode[i] : '-';
+                table += `<tr><td>${clue}</td><td>${guessedNum}</td><td>${actualNum}</td></tr>`;
+            }
+            table += '</tbody></table>';
+            return table;
+        }
+
         teamsToRender.forEach(teamInfo => {
             const team = teamInfo.name;
             const wrapper = document.createElement('div');
@@ -196,55 +210,52 @@ document.addEventListener('DOMContentLoaded', () => {
             const team = entry.team;
             const opponent = team === 'white' ? 'black' : 'white';
 
-            // Special handling for round 1 interception
-            if (round === 1) {
-                const opponentGuessCodeEl = document.getElementById(`guess-code-${opponent}-1`);
-                if (opponentGuessCodeEl) {
-                    opponentGuessCodeEl.textContent = 'X-X-X';
-                }
-            }
-
-            // Update clues display for the team that gave clues
-            const cluesContainer = document.getElementById(`clues-${team}-${round}`);
-            if(cluesContainer) cluesContainer.innerHTML = entry.clues.map(c => `<div>${c}</div>`).join('');
-
-            // Handle decipher result
+            // Determine correct code
+            let correctCode = null;
             if (entry.decipherResult) {
-                const res = entry.decipherResult;
-                const guessCodeEl = document.getElementById(`guess-code-${team}-${round}`);
-                if(guessCodeEl) guessCodeEl.textContent = res.guess.join('-');
-
-                if (res.type === 'decipher_fail') {
-                    const actualCodeEl = document.getElementById(`actual-code-${team}-${round}`);
-                    if(actualCodeEl) actualCodeEl.textContent = res.correctCode.join('-');
-                    // Populate summary
-                    res.correctCode.forEach((code, index) => {
-                        const clueList = document.getElementById(`summary-${team}-${code}`);
-                        if(clueList) {
-                            const li = document.createElement('li');
-                            li.textContent = entry.clues[index];
-                            clueList.appendChild(li);
-                        }
-                    });
-                } else { // success
-                     const actualCodeEl = document.getElementById(`actual-code-${team}-${round}`);
-                     if(actualCodeEl) actualCodeEl.textContent = res.guess.join('-');
-                     res.guess.forEach((code, index) => {
-                        const clueList = document.getElementById(`summary-${team}-${code}`);
-                        if(clueList) {
-                            const li = document.createElement('li');
-                            li.textContent = entry.clues[index];
-                            clueList.appendChild(li);
-                        }
-                    });
-                }
+                correctCode = entry.decipherResult.type === 'decipher_success'
+                    ? entry.decipherResult.guess
+                    : entry.decipherResult.correctCode;
             }
 
-            // Handle interception result
-            if (entry.interceptionResult) {
-                const res = entry.interceptionResult;
-                const guessCodeEl = document.getElementById(`guess-code-${opponent}-${round}`);
-                 if(guessCodeEl) guessCodeEl.textContent = res.guess.join('-');
+            // Populate clue tables
+            const clues = entry.clues;
+            const teamGuess = entry.decipherResult ? entry.decipherResult.guess : null;
+            const opponentGuess = entry.interceptionResult ? entry.interceptionResult.guess : null;
+
+            const teamCluesContainer = document.getElementById(`clues-${team}-${round}`);
+            if (teamCluesContainer) {
+                teamCluesContainer.innerHTML = generateClueTable(clues, teamGuess, correctCode);
+            }
+
+            const opponentCluesContainer = document.getElementById(`clues-${opponent}-${round}`);
+            if (opponentCluesContainer) {
+                opponentCluesContainer.innerHTML = generateClueTable(clues, opponentGuess, correctCode);
+            }
+
+            // Update main code icons
+            if (teamGuess) {
+                document.getElementById(`guess-code-${team}-${round}`).textContent = teamGuess.join('-');
+            }
+            if (opponentGuess) {
+                document.getElementById(`guess-code-${opponent}-${round}`).textContent = opponentGuess.join('-');
+            } else if (round === 1) {
+                document.getElementById(`guess-code-${opponent}-${round}`).textContent = 'X-X-X';
+            }
+
+            if (correctCode) {
+                document.getElementById(`actual-code-${team}-${round}`).textContent = correctCode.join('-');
+                document.getElementById(`actual-code-${opponent}-${round}`).textContent = correctCode.join('-');
+
+                // Populate summary lists
+                correctCode.forEach((code, index) => {
+                    const summaryList = document.getElementById(`summary-${team}-${code}`);
+                    if (summaryList) {
+                        const li = document.createElement('li');
+                        li.textContent = clues[index];
+                        summaryList.appendChild(li);
+                    }
+                });
             }
         });
     }
@@ -254,6 +265,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!currentPlayer) return;
 
         const playerTeam = currentPlayer.team;
+        updateTables(gameState, playerTeam);
+
         const isMyTurn = gameState.currentTeam === playerTeam;
         const opponentTeam = playerTeam === 'white' ? 'black' : 'white';
         const isCommunicator = gameState.communicators[playerTeam] === currentPlayer.id;
@@ -316,7 +329,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         renderHistory(gameState.history);
-        updateTables(gameState, playerTeam);
 
         const currentCommunicator = players.find(p => p.id === gameState.communicators[gameState.currentTeam]);
 
