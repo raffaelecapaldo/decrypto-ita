@@ -69,3 +69,26 @@
     font-size: 1.2rem;
     color: var(--accent-color);
 }
+
+.history-area {
+    display: block; /* Assicura che sia sempre visibile */
+    margin-top: 30px;
+    background-color: #fdfdfd;
+}
+
+.history-entry {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.history-entry:last-child {
+    border-bottom: none;
+}
+
+.history-entry.success {
+    background-color: #e8f5e9; /* Verde chiaro per successo */
+}
+
+.history-entry.fail {
+    background-color: #ffebee; /* Rosso chiaro per fallimento */
+}

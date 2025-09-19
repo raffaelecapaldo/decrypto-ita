@@ -26,6 +26,8 @@
     const turnPhaseMessage = document.getElementById('turn-phase-message');
     const gameLogArea = document.getElementById('game-log-area');
     const gameLogList = document.getElementById('game-log-list');
+    const historyArea = document.getElementById('history-area');
+    const gameHistory = document.getElementById('game-history');
 
     const secretCodeDisplay = document.getElementById('secret-code-display');
     const submitCluesBtn = document.getElementById('submit-clues-btn');
@@ -161,6 +163,7 @@
         document.getElementById('game-over-area').style.display = 'none';
 
         updateGameLog(gameState, players);
+        renderHistory(gameState.history);
 
         const currentCommunicator = players.find(p => p.id === gameState.communicators[gameState.currentTeam]);
 
@@ -208,6 +211,51 @@
                 }
             }
         }
+    }
+
+    function renderHistory(history) {
+        gameHistory.innerHTML = '';
+        historyArea.style.display = 'block';
+
+        if (!history || history.length === 0) {
+            gameHistory.innerHTML = '<p>Lo storico è ancora vuoto.</p>';
+            return;
+        }
+
+        history.forEach(entry => {
+            const entryDiv = document.createElement('div');
+            entryDiv.classList.add('history-entry');
+
+            const { round, clues, result } = entry;
+            const teamName = result.team === 'white' ? 'Bianca' : 'Nera';
+            let outcomeText = '';
+
+            switch (result.type) {
+                case 'interception_success':
+                    outcomeText = `La squadra ${teamName} ha intercettato con successo con il codice ${result.guess.join('-')}.`;
+                    entryDiv.classList.add('success');
+                    break;
+                case 'interception_fail':
+                    outcomeText = `La squadra ${teamName} non è riuscita a intercettare con il codice ${result.guess.join('-')}.`;
+                    entryDiv.classList.add('fail');
+                    break;
+                case 'decipher_success':
+                    outcomeText = `La squadra ${teamName} ha decifrato con successo.`;
+                     entryDiv.classList.add('success');
+                    break;
+                case 'decipher_fail':
+                    outcomeText = `La squadra ${teamName} ha sbagliato la decifrazione. Il codice corretto era ${result.correctCode.join('-')}.`;
+                    entryDiv.classList.add('fail');
+                    break;
+            }
+
+            entryDiv.innerHTML = `
+                <p><strong>Round ${round}</strong></p>
+                <p>Indizi: ${clues.join(', ')}</p>
+                <p>${outcomeText}</p>
+            `;
+            gameHistory.appendChild(entryDiv);
+        });
     }
 
     window.ui = { updateLobby, renderGameState };

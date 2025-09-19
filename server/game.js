@@ -149,6 +149,16 @@ function handleGuess(gameState, player, guess) {
         newGameState.phase = 'finished';
     }
 
+    // Aggiungi l'evento alla cronologia solo se c'è stato un tentativo
+    if (newGameState.turnResult && (newGameState.turnResult.type.includes('interception') || newGameState.turnResult.type.includes('decipher'))) {
+        newGameState.history.push({
+            round: newGameState.currentRound,
+            team: newGameState.currentTeam,
+            clues: newGameState.currentClues,
+            result: newGameState.turnResult
+        });
+    }
+
     return { gameState: newGameState };
 }
 
