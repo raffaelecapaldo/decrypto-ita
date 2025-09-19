@@ -62,7 +62,13 @@ function handleClueSubmission(gameState, player, clues) {
     if (gameState.phase !== 'clue-giving') return { error: 'Non è la fase di dare gli indizi.' };
 
     const newGameState = JSON.parse(JSON.stringify(gameState));
-    newGameState.phase = 'interception'; // La prima fase dopo gli indizi è l'intercettazione
+
+    if (gameState.currentRound === 1) {
+        newGameState.phase = 'deciphering';
+    } else {
+        newGameState.phase = 'interception';
+    }
+
     newGameState.currentClues = clues;
     newGameState.turnResult = { type: 'clue_submission', player: player.name, team: currentTeam };
     return { gameState: newGameState };
