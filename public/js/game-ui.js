@@ -198,7 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Update clues display for the team that gave clues
             const cluesContainer = document.getElementById(`clues-${team}-${round}`);
-            if(cluesContainer) cluesContainer.innerHTML = entry.clues.map(c => `<span>${c}</span>`).join(', ');
+            if(cluesContainer) cluesContainer.innerHTML = entry.clues.map(c => `<div>${c}</div>`).join('');
 
             // Handle decipher result
             if (entry.decipherResult) {
