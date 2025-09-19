@@ -81,9 +81,11 @@
 
 .modal-table .round-clues {
     background-color: #d9d9d9;
-    height: 60px;
+    padding: 10px;
     border-radius: 0 0 5px 5px;
     margin-bottom: 10px;
+    color: #333;
+    min-height: 60px;
 }
 
 .modal-table .round-number {

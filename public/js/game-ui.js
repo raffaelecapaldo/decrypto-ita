@@ -196,6 +196,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const team = entry.team;
             const opponent = team === 'white' ? 'black' : 'white';
 
+            // Special handling for round 1 interception
+            if (round === 1) {
+                const opponentGuessCodeEl = document.getElementById(`guess-code-${opponent}-1`);
+                if (opponentGuessCodeEl) {
+                    opponentGuessCodeEl.textContent = 'X-X-X';
+                }
+            }
+
             // Update clues display for the team that gave clues
             const cluesContainer = document.getElementById(`clues-${team}-${round}`);
             if(cluesContainer) cluesContainer.innerHTML = entry.clues.map(c => `<div>${c}</div>`).join('');
