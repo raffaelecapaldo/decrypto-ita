@@ -27,14 +27,9 @@
         socket.emit('submitClues', { roomCode: currentRoomCode, clues });
     }
 
-    function submitGuess(guess) {
+    function submitAttempt(guess) {
         if (!currentRoomCode) return;
-        socket.emit('submitGuess', { roomCode: currentRoomCode, guess });
-    }
-
-    function submitInterception(guess) {
-        if (!currentRoomCode) return;
-        socket.emit('submitInterception', { roomCode: currentRoomCode, guess });
+        socket.emit('submitAttempt', { roomCode: currentRoomCode, guess });
     }
 
     // --- Gestisci eventi dal server ---
@@ -92,8 +87,7 @@
         joinTeam,
         startGame,
         submitClues,
-        submitGuess,
-        submitInterception,
+        submitAttempt,
         getId: () => socket.id,
     };
 })();

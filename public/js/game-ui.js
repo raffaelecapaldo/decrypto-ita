@@ -21,6 +21,11 @@
     const interceptionArea = document.getElementById('interception-area');
     const cluesDisplayArea = document.getElementById('clues-display-area');
     const cluesList = document.getElementById('clues-list');
+    const turnStatusArea = document.getElementById('turn-status-area');
+    const turnStatusMessage = document.getElementById('turn-status-message');
+    const turnPhaseMessage = document.getElementById('turn-phase-message');
+    const gameLogArea = document.getElementById('game-log-area');
+    const gameLogList = document.getElementById('game-log-list');
 
     const secretCodeDisplay = document.getElementById('secret-code-display');
     const submitCluesBtn = document.getElementById('submit-clues-btn');
@@ -48,7 +53,7 @@
             alert('Inserisci 3 numeri validi.');
             return;
         }
-        window.socket.submitGuess(guess);
+        window.socket.submitAttempt(guess);
         guessInputs.forEach(input => input.value = '');
     });
 
@@ -60,7 +65,7 @@
             alert('Inserisci 3 numeri validi per intercettare.');
             return;
         }
-        window.socket.submitInterception(guess);
+        window.socket.submitAttempt(guess);
         interceptionInputs.forEach(input => input.value = '');
     });
 
@@ -83,20 +88,53 @@
         });
     }
 
+    function updateGameLog(gameState, players) {
+        const { turnResult } = gameState;
+        if (!turnResult) {
+            gameLogArea.style.display = 'none';
+            return;
+        }
+
+        gameLogArea.style.display = 'block';
+        const li = document.createElement('li');
+        const teamName = turnResult.team === 'white' ? 'Bianca' : 'Nera';
+
+        switch (turnResult.type) {
+            case 'clue_submission':
+                li.innerHTML = `<strong>${turnResult.player}</strong> (Squadra ${teamName}) ha dato gli indizi.`;
+                break;
+            case 'interception_success':
+                li.innerHTML = `<strong>${turnResult.player}</strong> (Squadra ${teamName}) ha intercettato con successo il codice! (+1 punto intercettazione)`;
+                break;
+            case 'interception_fail':
+                li.innerHTML = `<strong>${turnResult.player}</strong> (Squadra ${teamName}) ha provato a intercettare ma ha sbagliato.`;
+                break;
+            case 'decipher_success':
+                li.innerHTML = `<strong>${turnResult.player}</strong> (Squadra ${teamName}) ha decifrato correttamente il codice!`;
+                break;
+            case 'decipher_fail':
+                li.innerHTML = `<strong>${turnResult.player}</strong> (Squadra ${teamName}) ha sbagliato a decifrare. Il codice era ${turnResult.correctCode.join('-')}. (+1 punto errore)`;
+                break;
+        }
+        // Aggiungi il nuovo log in cima alla lista
+        if (gameLogList.firstChild) {
+            gameLogList.insertBefore(li, gameLogList.firstChild);
+        } else {
+            gameLogList.appendChild(li);
+        }
+    }
+
     function renderGameState(gameState, players, ownSocketId) {
         const currentPlayer = players.find(p => p.socketId === ownSocketId);
         if (!currentPlayer) return;
 
         const playerTeam = currentPlayer.team;
         const isMyTurn = gameState.currentTeam === playerTeam;
-        const myTeamState = gameState.teams[playerTeam];
-        const isCommunicator = myTeamState && gameState.communicators[playerTeam] === currentPlayer.id;
+        const opponentTeam = playerTeam === 'white' ? 'black' : 'white';
+        const isCommunicator = gameState.communicators[playerTeam] === currentPlayer.id;
 
-        // Trova i nomi dei comunicatori
         const whiteCommPlayer = players.find(p => p.id === gameState.communicators.white);
         const blackCommPlayer = players.find(p => p.id === gameState.communicators.black);
-        document.getElementById('white-communicator-name').textContent = whiteCommPlayer ? whiteCommPlayer.name : 'N/A';
-        document.getElementById('black-communicator-name').textContent = blackCommPlayer ? blackCommPlayer.name : 'N/A';
 
         // Aggiornamenti generali
         roundNumber.textContent = gameState.currentRound;
@@ -105,48 +143,70 @@
         whiteMistakes.textContent = gameState.teams.white.score.mistakes;
         blackInterceptions.textContent = gameState.teams.black.score.interceptions;
         blackMistakes.textContent = gameState.teams.black.score.mistakes;
+        document.getElementById('white-communicator-name').textContent = whiteCommPlayer ? `${whiteCommPlayer.name}` : 'N/A';
+        document.getElementById('black-communicator-name').textContent = blackCommPlayer ? `${blackCommPlayer.name}` : 'N/A';
 
         // Mostra parole chiave
-        if (playerTeam === 'white') {
-            whiteTeamPanel.style.display = 'block';
-            blackTeamPanel.style.display = 'none';
-            whiteKeywordsList.innerHTML = gameState.teams.white.keywords.map((kw, i) => `<li>${i + 1}. ${kw}</li>`).join('');
-        } else if (playerTeam === 'black') {
-            whiteTeamPanel.style.display = 'none';
-            blackTeamPanel.style.display = 'block';
-            blackKeywordsList.innerHTML = gameState.teams.black.keywords.map((kw, i) => `<li>${i + 1}. ${kw}</li>`).join('');
-        }
+        whiteTeamPanel.style.display = playerTeam === 'white' ? 'block' : 'none';
+        blackTeamPanel.style.display = playerTeam === 'black' ? 'block' : 'none';
+        if (playerTeam === 'white') whiteKeywordsList.innerHTML = gameState.teams.white.keywords.map((kw, i) => `<li>${i + 1}. ${kw}</li>`).join('');
+        if (playerTeam === 'black') blackKeywordsList.innerHTML = gameState.teams.black.keywords.map((kw, i) => `<li>${i + 1}. ${kw}</li>`).join('');
 
         // Nascondi tutte le aree di azione
         communicatorArea.style.display = 'none';
         guesserArea.style.display = 'none';
         interceptionArea.style.display = 'none';
         cluesDisplayArea.style.display = 'none';
+        turnStatusArea.style.display = 'none';
+        document.getElementById('game-over-area').style.display = 'none';
+
+        updateGameLog(gameState, players);
+
+        const currentCommunicator = players.find(p => p.id === gameState.communicators[gameState.currentTeam]);
 
         // Logica per fase e ruolo
-        if (gameState.phase === 'clue-giving') {
-            if (isMyTurn && isCommunicator) {
-                communicatorArea.style.display = 'block';
-                if (myTeamState.currentCode) {
-                    secretCodeDisplay.textContent = myTeamState.currentCode.join(' - ');
-                }
-            } else {
-                // In attesa degli indizi
-            }
-        } else if (gameState.phase === 'guessing') {
-            cluesDisplayArea.style.display = 'block';
-            cluesList.innerHTML = gameState.currentClues.map(c => `<li>${c}</li>`).join('');
-
-            if (isMyTurn && !isCommunicator) {
-                guesserArea.style.display = 'block';
-            } else if (!isMyTurn) {
-                interceptionArea.style.display = 'block';
-            }
-        } else if (gameState.phase === 'finished') {
+        if (gameState.phase === 'finished') {
             const gameOverArea = document.getElementById('game-over-area');
             const winnerDisplay = document.getElementById('winner-display');
             winnerDisplay.textContent = gameState.winner === 'white' ? 'Bianca' : 'Nera';
             gameOverArea.style.display = 'block';
+            return;
+        }
+
+        turnStatusArea.style.display = 'block';
+        turnStatusMessage.textContent = `Turno della squadra ${gameState.currentTeam === 'white' ? 'Bianca' : 'Nera'}. Comunicatore: ${currentCommunicator.name}.`;
+
+        if (gameState.phase === 'clue-giving') {
+            turnPhaseMessage.textContent = "Fase: il comunicatore sta preparando gli indizi.";
+            if (isMyTurn && isCommunicator) {
+                communicatorArea.style.display = 'block';
+                secretCodeDisplay.textContent = gameState.teams[playerTeam].currentCode.join(' - ');
+            }
+        } else {
+            cluesDisplayArea.style.display = 'block';
+            cluesList.innerHTML = gameState.currentClues.map(c => `<li>${c}</li>`).join('');
+
+            if (gameState.phase === 'interception') {
+                const attemptedPlayer = players.find(p => p.id === gameState.attemptedPlayers.interception);
+                if (attemptedPlayer) {
+                    turnPhaseMessage.textContent = `Fase: Intercettazione. ${attemptedPlayer.name} ha già tentato. In attesa della squadra di turno.`;
+                } else {
+                    turnPhaseMessage.textContent = `Fase: Intercettazione. La squadra ${opponentTeam} può provare a intercettare.`;
+                    if (!isMyTurn) { // Sei nella squadra che deve intercettare
+                        interceptionArea.style.display = 'block';
+                    }
+                }
+            } else if (gameState.phase === 'deciphering') {
+                 const attemptedPlayer = players.find(p => p.id === gameState.attemptedPlayers.decipher);
+                if (attemptedPlayer) {
+                    turnPhaseMessage.textContent = `Fase: Decifrazione. ${attemptedPlayer.name} ha già tentato. Il turno sta per finire.`;
+                } else {
+                    turnPhaseMessage.textContent = `Fase: Decifrazione. La squadra ${gameState.currentTeam} deve indovinare il codice.`;
+                     if (isMyTurn && !isCommunicator) {
+                        guesserArea.style.display = 'block';
+                    }
+                }
+            }
         }
     }
 

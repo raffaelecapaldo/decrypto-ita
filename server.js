@@ -98,11 +98,10 @@ io.on('connection', (socket) => {
     const room = RoomManager.getRoom(roomCode);
     if (!room || !room.gameState) return;
 
-    // Trova l'ID del giocatore dal socket.id
     const player = room.players.find(p => p.socketId === socket.id);
     if (!player) return;
 
-    const { gameState, error } = GameManager.handleClueSubmission(room.gameState, player.id, clues);
+    const { gameState, error } = GameManager.handleClueSubmission(room.gameState, player, clues);
     if (error) {
         socket.emit('error', error);
         return;
@@ -112,26 +111,13 @@ io.on('connection', (socket) => {
     broadcastGameStateUpdate(room);
   });
 
-  socket.on('submitGuess', ({ roomCode, guess }) => {
+  socket.on('submitAttempt', ({ roomCode, guess }) => {
     const room = RoomManager.getRoom(roomCode);
     if (!room || !room.gameState) return;
     const player = room.players.find(p => p.socketId === socket.id);
     if (!player) return;
 
-    const { gameState, error } = GameManager.handleGuess(room.gameState, player, guess, false);
-    if (error) return socket.emit('error', error);
-
-    room.gameState = gameState;
-    broadcastGameStateUpdate(room);
-  });
-
-  socket.on('submitInterception', ({ roomCode, guess }) => {
-    const room = RoomManager.getRoom(roomCode);
-    if (!room || !room.gameState) return;
-    const player = room.players.find(p => p.socketId === socket.id);
-    if (!player) return;
-
-    const { gameState, error } = GameManager.handleGuess(room.gameState, player, guess, true);
+    const { gameState, error } = GameManager.handleGuess(room.gameState, player, guess);
     if (error) return socket.emit('error', error);
 
     room.gameState = gameState;

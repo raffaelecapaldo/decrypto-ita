@@ -31,7 +31,7 @@ function startGame(room) {
     const gameState = {
         currentRound: 1,
         currentTeam: 'white',
-        phase: 'clue-giving',
+        phase: 'clue-giving', // Fasi: clue-giving, interception, deciphering, finished
         teams: {
             white: { keywords: shuffledKeywords.slice(0, 4), score: { interceptions: 0, mistakes: 0 }, currentCode: generateSecretCode() },
             black: { keywords: shuffledKeywords.slice(4, 8), score: { interceptions: 0, mistakes: 0 }, currentCode: null }
@@ -47,18 +47,23 @@ function startGame(room) {
         },
         currentClues: [],
         turnResult: null,
+        attemptedPlayers: {
+            interception: null, // ID del giocatore che ha tentato di intercettare
+            decipher: null, // ID del giocatore che ha tentato di decifrare
+        }
     };
     return { gameState };
 }
 
-function handleClueSubmission(gameState, playerId, clues) {
+function handleClueSubmission(gameState, player, clues) {
     const { currentTeam, communicators } = gameState;
-    if (playerId !== communicators[currentTeam]) return { error: 'Non sei il comunicatore.' };
+    if (player.id !== communicators[currentTeam]) return { error: 'Non sei il comunicatore.' };
     if (gameState.phase !== 'clue-giving') return { error: 'Non è la fase di dare gli indizi.' };
 
     const newGameState = JSON.parse(JSON.stringify(gameState));
-    newGameState.phase = 'guessing';
+    newGameState.phase = 'interception'; // La prima fase dopo gli indizi è l'intercettazione
     newGameState.currentClues = clues;
+    newGameState.turnResult = { type: 'clue_submission', player: player.name, team: currentTeam };
     return { gameState: newGameState };
 }
 
@@ -75,45 +80,63 @@ function advanceTurn(gameState) {
         gameState.currentRound++;
     }
 
-    // Rotate communicator
+    // Rotate communicator for the next team
     const teamPlayerIds = gameState.communicatorRotation[nextTeam];
     const currentCommIndex = teamPlayerIds.indexOf(gameState.communicators[nextTeam]);
-    gameState.communicators[nextTeam] = teamPlayerIds[(currentCommIndex + 1) % teamPlayerIds.length];
+    const nextCommIndex = (currentCommIndex + 1) % teamPlayerIds.length;
+    gameState.communicators[nextTeam] = teamPlayerIds[nextCommIndex];
 
     gameState.currentTeam = nextTeam;
     gameState.phase = 'clue-giving';
     gameState.teams[nextTeam].currentCode = generateSecretCode();
     gameState.currentClues = [];
     gameState.turnResult = null;
+    gameState.attemptedPlayers = { interception: null, decipher: null }; // Resetta i tentativi
     return gameState;
 }
 
 
-function handleGuess(gameState, player, guess, isInterception) {
-    const { currentTeam, phase } = gameState;
+function handleGuess(gameState, player, guess) {
+    const { currentTeam, phase, attemptedPlayers, teams } = gameState;
     const opponentTeam = currentTeam === 'white' ? 'black' : 'white';
-    const correctCode = gameState.teams[currentTeam].currentCode;
-
-    if (phase !== 'guessing') return { error: 'Non è la fase per indovinare.' };
+    const correctCode = teams[currentTeam].currentCode;
 
     let newGameState = JSON.parse(JSON.stringify(gameState));
 
-    if (isInterception) {
-        if (player.team !== opponentTeam) return { error: 'Non puoi intercettare per la tua stessa squadra.' };
-        if (arraysEqual(guess, correctCode)) {
+    if (phase === 'interception') {
+        if (player.team !== opponentTeam) return { error: 'Non puoi intercettare in questo momento.' };
+        if (attemptedPlayers.interception) return { error: 'Qualcuno della tua squadra ha già provato a intercettare.' };
+
+        newGameState.attemptedPlayers.interception = player.id;
+        const isCorrect = arraysEqual(guess, correctCode);
+
+        if (isCorrect) {
             newGameState.teams[opponentTeam].score.interceptions++;
-            newGameState.turnResult = { type: 'interception_success', team: opponentTeam };
+            newGameState.turnResult = { type: 'interception_success', player: player.name, team: opponentTeam, guess };
+            newGameState = advanceTurn(newGameState); // Il turno finisce
         } else {
-             newGameState.turnResult = { type: 'interception_fail', team: opponentTeam };
+            newGameState.turnResult = { type: 'interception_fail', player: player.name, team: opponentTeam, guess };
+            newGameState.phase = 'deciphering'; // Si passa alla fase di decifrazione
         }
-    } else {
-        if (player.team !== currentTeam) return { error: 'Non è il turno della tua squadra.' };
-        if (arraysEqual(guess, correctCode)) {
-             newGameState.turnResult = { type: 'guess_success', team: currentTeam };
+
+    } else if (phase === 'deciphering') {
+        if (player.team !== currentTeam) return { error: 'Non è il turno della tua squadra per decifrare.' };
+        if (attemptedPlayers.decipher) return { error: 'Qualcuno della tua squadra ha già provato a decifrare.' };
+        if (player.id === newGameState.communicators[currentTeam]) return { error: 'Il comunicatore non può decifrare.' };
+
+        newGameState.attemptedPlayers.decipher = player.id;
+        const isCorrect = arraysEqual(guess, correctCode);
+
+        if (isCorrect) {
+            newGameState.turnResult = { type: 'decipher_success', player: player.name, team: currentTeam, guess };
         } else {
             newGameState.teams[currentTeam].score.mistakes++;
-             newGameState.turnResult = { type: 'guess_fail', team: currentTeam };
+            newGameState.turnResult = { type: 'decipher_fail', player: player.name, team: currentTeam, guess, correctCode };
         }
+        newGameState = advanceTurn(newGameState); // Il turno finisce comunque
+
+    } else {
+        return { error: `Non è la fase giusta per indovinare (${phase}).` };
     }
 
     // Controlla condizioni di vittoria
@@ -124,10 +147,6 @@ function handleGuess(gameState, player, guess, isInterception) {
 
     if (newGameState.winner) {
         newGameState.phase = 'finished';
-    } else {
-       // Per ora, avanziamo il turno subito dopo il primo tentativo.
-       // Una logica più complessa attenderebbe entrambi i tentativi.
-       newGameState = advanceTurn(newGameState);
     }
 
     return { gameState: newGameState };
