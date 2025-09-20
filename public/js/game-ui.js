@@ -365,7 +365,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (attemptedPlayer) {
                     turnPhaseMessage.textContent = `Fase: Decifrazione. ${attemptedPlayer.name} ha già tentato. Il turno sta per finire.`;
                 } else {
-                    turnPhaseMessage.textContent = `Fase: Decifrazione. La squadra ${gameState.currentTeam} deve indovinare il codice.`;
+turnPhaseMessage.textContent = `Fase: Decifrazione. La squadra ${gameState.currentTeam === "black" ? "nera" : gameState.currentTeam === "white" ? "bianca" : gameState.currentTeam} deve indovinare il codice.`;
                      if (isMyTurn && !isCommunicator) {
                         guesserArea.style.display = 'block';
                     }
