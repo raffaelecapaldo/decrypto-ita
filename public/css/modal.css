@@ -61,6 +61,17 @@
 
 .team-table-wrapper {
     width: 48%;
+    padding: 15px;
+    border-radius: 8px;
+    border: 3px solid transparent;
+}
+
+.team-border-white {
+    border-color: white;
+}
+
+.team-border-black {
+    border-color: #1a1a1a;
 }
 
 .modal-table {

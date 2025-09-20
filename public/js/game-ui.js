@@ -169,7 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
         teamsToRender.forEach(teamInfo => {
             const teamId = teamInfo.id;
             const wrapper = document.createElement('div');
-            wrapper.className = 'team-table-wrapper';
+            wrapper.className = `team-table-wrapper team-border-${teamId}`;
 
             let tableStructure = `<h3>${teamInfo.title}</h3>`;
 
