@@ -163,6 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return table;
         }
 
+        // 1. Create the skeleton of the tables
         teamsToRender.forEach(teamInfo => {
             const team = teamInfo.name;
             const wrapper = document.createElement('div');
@@ -200,13 +201,13 @@ document.addEventListener('DOMContentLoaded', () => {
             modalBody.appendChild(wrapper);
         });
 
-        // Populate tables with history data
+        // 2. Populate the tables with history data
         gameState.history.forEach(entry => {
             const round = entry.round;
-            const team = entry.team;
-            const opponent = team === 'white' ? 'black' : 'white';
+            const team = entry.team; // The team that was playing
+            const clues = entry.clues;
 
-            // Determine correct code
+            // Determine correct code for this turn
             let correctCode = null;
             if (entry.decipherResult) {
                 correctCode = entry.decipherResult.type === 'decipher_success'
@@ -214,23 +215,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     : entry.decipherResult.correctCode;
             }
 
-            // Populate clue tables
-            const clues = entry.clues;
+            // The guess from the team that was playing
             const teamGuess = entry.decipherResult ? entry.decipherResult.guess : null;
-            const opponentGuess = entry.interceptionResult ? entry.interceptionResult.guess : null;
 
-            const teamCluesContainer = document.getElementById(`clues-${team}-${round}`);
-            if (teamCluesContainer) {
-                teamCluesContainer.innerHTML = generateClueTable(clues, teamGuess, correctCode);
+            // Find the container for the team that played, and populate it.
+            const cluesContainer = document.getElementById(`clues-${team}-${round}`);
+            if (cluesContainer) {
+                cluesContainer.innerHTML = generateClueTable(clues, teamGuess, correctCode);
             }
 
-            const opponentCluesContainer = document.getElementById(`clues-${opponent}-${round}`);
-            if (opponentCluesContainer) {
-                opponentCluesContainer.innerHTML = generateClueTable(clues, opponentGuess, correctCode);
-            }
-
+            // Populate summary list for the team that played
             if (correctCode) {
-                // Populate summary lists
                 correctCode.forEach((code, index) => {
                     const summaryList = document.getElementById(`summary-${team}-${code}`);
                     if (summaryList) {
