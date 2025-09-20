@@ -144,9 +144,11 @@ document.addEventListener('DOMContentLoaded', () => {
         modalBody.innerHTML = ''; // Clear previous content
 
         const opponentTeam = playerTeam === 'white' ? 'black' : 'white';
+
+        // The two tables to render are always from the player's perspective: "My Team" and "Opponent Team"
         const teamsToRender = [
-            { name: playerTeam, title: `Squadra ${playerTeam === 'white' ? 'Bianca' : 'Nera'} (La tua)` },
-            { name: opponentTeam, title: `Squadra ${opponentTeam === 'white' ? 'Bianca' : 'Nera'}` }
+            { id: playerTeam, title: `Squadra ${playerTeam === 'white' ? 'Bianca' : 'Nera'} (La tua)` },
+            { id: opponentTeam, title: `Squadra ${opponentTeam === 'white' ? 'Bianca' : 'Nera'}` }
         ];
 
         function generateClueTable(clues, guess, correctCode) {
@@ -165,7 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 1. Create the skeleton of the tables
         teamsToRender.forEach(teamInfo => {
-            const team = teamInfo.name;
+            const teamId = teamInfo.id;
             const wrapper = document.createElement('div');
             wrapper.className = 'team-table-wrapper';
 
@@ -175,11 +177,11 @@ document.addEventListener('DOMContentLoaded', () => {
             tableStructure += '<div class="modal-table">';
             for (let i = 1; i <= 8; i++) {
                 tableStructure += `
-                    <div class="round-container" id="round-${team}-${i}">
+                    <div class="round-container" id="round-${teamId}-${i}">
                         <div class="round-header">
                             <span class="round-number"># ${i.toString().padStart(2, '0')}</span>
                         </div>
-                        <div class="round-clues" id="clues-${team}-${i}"></div>
+                        <div class="round-clues" id="clues-${teamId}-${i}"></div>
                     </div>
                 `;
             }
@@ -191,7 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 tableStructure += `
                     <div class="clue-summary-column">
                         <div class="clue-summary-title"># 0${i}</div>
-                        <ul class="clue-summary-list" id="summary-${team}-${i}"></ul>
+                        <ul class="clue-summary-list" id="summary-${teamId}-${i}"></ul>
                     </div>
                 `;
             }
@@ -201,13 +203,16 @@ document.addEventListener('DOMContentLoaded', () => {
             modalBody.appendChild(wrapper);
         });
 
-        // 2. Populate the tables with history data
+        // 2. Clear all summary lists before populating
+        document.querySelectorAll('.clue-summary-list').forEach(ul => ul.innerHTML = '');
+
+        // 3. Populate the tables with history data based on perspective
         gameState.history.forEach(entry => {
             const round = entry.round;
-            const team = entry.team; // The team that was playing
+            const clueGiverTeam = entry.team;
             const clues = entry.clues;
 
-            // Determine correct code for this turn
+            // Determine correct code for the turn
             let correctCode = null;
             if (entry.decipherResult) {
                 correctCode = entry.decipherResult.type === 'decipher_success'
@@ -215,19 +220,30 @@ document.addEventListener('DOMContentLoaded', () => {
                     : entry.decipherResult.correctCode;
             }
 
-            // The guess from the team that was playing
-            const teamGuess = entry.decipherResult ? entry.decipherResult.guess : null;
+            // Get the two guesses for the turn
+            const decipherGuess = entry.decipherResult ? entry.decipherResult.guess : null;
+            const interceptionGuess = entry.interceptionResult ? entry.interceptionResult.guess : null;
 
-            // Find the container for the team that played, and populate it.
-            const cluesContainer = document.getElementById(`clues-${team}-${round}`);
-            if (cluesContainer) {
-                cluesContainer.innerHTML = generateClueTable(clues, teamGuess, correctCode);
+            // Determine which table to update and with which guess
+            const myTeamCluesContainer = document.getElementById(`clues-${playerTeam}-${round}`);
+            const opponentCluesContainer = document.getElementById(`clues-${opponentTeam}-${round}`);
+
+            if (clueGiverTeam === playerTeam) {
+                // My team gave the clues
+                if (myTeamCluesContainer) {
+                    myTeamCluesContainer.innerHTML = generateClueTable(clues, decipherGuess, correctCode);
+                }
+            } else {
+                // The opponent gave the clues
+                if (opponentCluesContainer) {
+                    opponentCluesContainer.innerHTML = generateClueTable(clues, interceptionGuess, correctCode);
+                }
             }
 
-            // Populate summary list for the team that played
+            // Populate summary list for the clue-giving team
             if (correctCode) {
                 correctCode.forEach((code, index) => {
-                    const summaryList = document.getElementById(`summary-${team}-${code}`);
+                    const summaryList = document.getElementById(`summary-${clueGiverTeam}-${code}`);
                     if (summaryList) {
                         const li = document.createElement('li');
                         li.textContent = clues[index];
