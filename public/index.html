@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="css/mobile.css">
     <link rel="stylesheet" href="css/history.css">
     <link rel="stylesheet" href="css/modern.css">
+    <link rel="stylesheet" href="css/modal.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
@@ -166,7 +167,10 @@
                 <button id="submit-interception-btn">Tenta l'intercettazione</button>
             </div>
              <div id="history-area" class="history-area player-action-area">
-                <h4>Storico</h4>
+                <div class="history-header">
+                    <h4>Storico</h4>
+                    <button id="open-tables-modal-btn" class="header-button">Tabelle</button>
+                </div>
                 <div id="game-history"></div>
             </div>
 
@@ -174,6 +178,19 @@
                 <h2>Partita Terminata!</h2>
                 <p>La squadra <strong id="winner-display"></strong> ha vinto!</p>
                 <button id="play-again-btn">Gioca Ancora</button>
+            </div>
+
+            <!-- Modal Tabelle -->
+            <div id="tables-modal" class="modal">
+                <div class="modal-content">
+                    <span class="close-btn" id="close-tables-modal-btn">&times;</span>
+                    <div class="modal-header">
+                        <h2 class="modal-title">DECRYPTO</h2>
+                    </div>
+                    <div class="modal-body" id="modal-tables-body">
+                        <!-- Le tabelle verranno inserite qui da JS -->
+                    </div>
+                </div>
             </div>
         </section>
     </div>

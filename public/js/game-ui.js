@@ -38,6 +38,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const guessError = document.getElementById('guess-error');
     const interceptionError = document.getElementById('interception-error');
 
+    // Elementi del Modal
+    const tablesModal = document.getElementById('tables-modal');
+    const openTablesModalBtn = document.getElementById('open-tables-modal-btn');
+    const closeTablesModalBtn = document.getElementById('close-tables-modal-btn');
+
+    openTablesModalBtn.addEventListener('click', () => {
+        tablesModal.style.display = 'block';
+    });
+
+    closeTablesModalBtn.addEventListener('click', () => {
+        tablesModal.style.display = 'none';
+    });
+
+    window.addEventListener('click', (event) => {
+        if (event.target === tablesModal) {
+            tablesModal.style.display = 'none';
+        }
+    });
+
     function showTemporaryError(element, message) {
         element.textContent = message;
         setTimeout(() => {
@@ -70,7 +89,6 @@ document.addEventListener('DOMContentLoaded', () => {
             showTemporaryError(guessError, 'Inserisci 3 numeri validi.');
             return;
         }
-        // Validazione per numeri non ripetuti
         const uniqueGuess = new Set(guess);
         if (uniqueGuess.size !== 3) {
             showTemporaryError(guessError, 'I numeri non devono essere ripetuti.');
@@ -88,7 +106,6 @@ document.addEventListener('DOMContentLoaded', () => {
             showTemporaryError(interceptionError, 'Inserisci 3 numeri validi per intercettare.');
             return;
         }
-        // Validazione per numeri non ripetuti
         const uniqueGuess = new Set(guess);
         if (uniqueGuess.size !== 3) {
             showTemporaryError(interceptionError, 'I numeri non devono essere ripetuti.');
@@ -104,7 +121,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const ownSocketId = window.socket.getId();
         const startGameBtn = document.getElementById('start-game-btn');
 
-        // Mostra il pulsante "Avvia Partita" solo al creatore della stanza
         if (ownSocketId === creatorId) {
             startGameBtn.style.display = 'block';
         } else {
@@ -117,11 +133,124 @@ document.addEventListener('DOMContentLoaded', () => {
             if (p.socketId === ownSocketId) {
                 text += ' (Tu)';
             }
-            // Questo non funzionerà qui perché lo stato di comunicatore non è nella lista lobby
-            // lo aggiungerò alla UI di gioco
             li.textContent = text;
             if (p.team === 'white') whiteTeamList.appendChild(li);
             else if (p.team === 'black') blackTeamList.appendChild(li);
+        });
+    }
+
+    function updateTables(gameState, playerTeam) {
+        const modalBody = document.getElementById('modal-tables-body');
+        modalBody.innerHTML = ''; // Clear previous content
+
+        const opponentTeam = playerTeam === 'white' ? 'black' : 'white';
+
+        // The two tables to render are always from the player's perspective: "My Team" and "Opponent Team"
+        const teamsToRender = [
+            { id: playerTeam, title: `Squadra ${playerTeam === 'white' ? 'Bianca' : 'Nera'} (La tua)` },
+            { id: opponentTeam, title: `Squadra ${opponentTeam === 'white' ? 'Bianca' : 'Nera'}` }
+        ];
+
+        function generateClueTable(clues, guess, correctCode) {
+            let table = '<table class="clue-detail-table">';
+            table += '<thead><tr><th>Indizio</th><th>Tentativo</th><th>Reale</th></tr></thead>';
+            table += '<tbody>';
+            for (let i = 0; i < 3; i++) {
+                const clue = clues[i] || '';
+                const guessedNum = guess ? guess[i] : '-';
+                const actualNum = correctCode ? correctCode[i] : '-';
+                table += `<tr><td>${clue}</td><td>${guessedNum}</td><td>${actualNum}</td></tr>`;
+            }
+            table += '</tbody></table>';
+            return table;
+        }
+
+        // 1. Create the skeleton of the tables
+        teamsToRender.forEach(teamInfo => {
+            const teamId = teamInfo.id;
+            const wrapper = document.createElement('div');
+            wrapper.className = `team-table-wrapper team-border-${teamId}`;
+
+            let tableStructure = `<h3>${teamInfo.title}</h3>`;
+
+            // Main table for rounds 1-8
+            tableStructure += '<div class="modal-table">';
+            for (let i = 1; i <= 8; i++) {
+                tableStructure += `
+                    <div class="round-container" id="round-${teamId}-${i}">
+                        <div class="round-header">
+                            <span class="round-number"># ${i.toString().padStart(2, '0')}</span>
+                        </div>
+                        <div class="round-clues" id="clues-${teamId}-${i}"></div>
+                    </div>
+                `;
+            }
+            tableStructure += '</div>';
+
+            // Clue summary section
+            tableStructure += '<div class="clue-summary-container">';
+            for (let i = 1; i <= 4; i++) {
+                tableStructure += `
+                    <div class="clue-summary-column">
+                        <div class="clue-summary-title"># 0${i}</div>
+                        <ul class="clue-summary-list" id="summary-${teamId}-${i}"></ul>
+                    </div>
+                `;
+            }
+            tableStructure += '</div>';
+
+            wrapper.innerHTML = tableStructure;
+            modalBody.appendChild(wrapper);
+        });
+
+        // 2. Clear all summary lists before populating
+        document.querySelectorAll('.clue-summary-list').forEach(ul => ul.innerHTML = '');
+
+        // 3. Populate the tables with history data based on perspective
+        gameState.history.forEach(entry => {
+            const round = entry.round;
+            const clueGiverTeam = entry.team;
+            const clues = entry.clues;
+
+            // Determine correct code for the turn
+            let correctCode = null;
+            if (entry.decipherResult) {
+                correctCode = entry.decipherResult.type === 'decipher_success'
+                    ? entry.decipherResult.guess
+                    : entry.decipherResult.correctCode;
+            }
+
+            // Get the two guesses for the turn
+            const decipherGuess = entry.decipherResult ? entry.decipherResult.guess : null;
+            const interceptionGuess = entry.interceptionResult ? entry.interceptionResult.guess : null;
+
+            // Determine which table to update and with which guess
+            const myTeamCluesContainer = document.getElementById(`clues-${playerTeam}-${round}`);
+            const opponentCluesContainer = document.getElementById(`clues-${opponentTeam}-${round}`);
+
+            if (clueGiverTeam === playerTeam) {
+                // My team gave the clues
+                if (myTeamCluesContainer) {
+                    myTeamCluesContainer.innerHTML = generateClueTable(clues, decipherGuess, correctCode);
+                }
+            } else {
+                // The opponent gave the clues
+                if (opponentCluesContainer) {
+                    opponentCluesContainer.innerHTML = generateClueTable(clues, interceptionGuess, correctCode);
+                }
+            }
+
+            // Populate summary list for the clue-giving team
+            if (correctCode) {
+                correctCode.forEach((code, index) => {
+                    const summaryList = document.getElementById(`summary-${clueGiverTeam}-${code}`);
+                    if (summaryList) {
+                        const li = document.createElement('li');
+                        li.textContent = clues[index];
+                        summaryList.appendChild(li);
+                    }
+                });
+            }
         });
     }
 
@@ -130,6 +259,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!currentPlayer) return;
 
         const playerTeam = currentPlayer.team;
+        updateTables(gameState, playerTeam);
+
         const isMyTurn = gameState.currentTeam === playerTeam;
         const opponentTeam = playerTeam === 'white' ? 'black' : 'white';
         const isCommunicator = gameState.communicators[playerTeam] === currentPlayer.id;
@@ -234,7 +365,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (attemptedPlayer) {
                     turnPhaseMessage.textContent = `Fase: Decifrazione. ${attemptedPlayer.name} ha già tentato. Il turno sta per finire.`;
                 } else {
-                    turnPhaseMessage.textContent = `Fase: Decifrazione. La squadra ${gameState.currentTeam} deve indovinare il codice.`;
+turnPhaseMessage.textContent = `Fase: Decifrazione. La squadra ${gameState.currentTeam === "black" ? "nera" : gameState.currentTeam === "white" ? "bianca" : gameState.currentTeam} deve indovinare il codice.`;
                      if (isMyTurn && !isCommunicator) {
                         guesserArea.style.display = 'block';
                     }
