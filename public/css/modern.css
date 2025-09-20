@@ -445,6 +445,22 @@ button:disabled {
     text-align: center;
 }
 
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.history-header h4 {
+    margin: 0;
+    padding: 0;
+    border: none;
+    color: var(--text-color);
+}
+
 .guess-inputs input {
     max-width: 80px;
 }
