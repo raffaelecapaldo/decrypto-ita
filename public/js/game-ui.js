@@ -97,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    
+
         const uniqueGuess = new Set(guess);
         if (uniqueGuess.size !== 3) {
             showTemporaryError(guessError, 'I numeri non devono essere ripetuti.');
@@ -115,6 +115,15 @@ document.addEventListener('DOMContentLoaded', () => {
             showTemporaryError(interceptionError, 'Inserisci 3 numeri validi per intercettare.');
             return;
         }
+
+         // NUOVO: Controlla se i numeri sono compresi tra 1 e 4
+    if (guess.some(num => num < 1 || num > 4)) {
+        showTemporaryError(guessError, 'I numeri devono essere compresi tra 1 e 4.');
+        return;
+    }
+
+
+    
         const uniqueGuess = new Set(guess);
         if (uniqueGuess.size !== 3) {
             showTemporaryError(interceptionError, 'I numeri non devono essere ripetuti.');
